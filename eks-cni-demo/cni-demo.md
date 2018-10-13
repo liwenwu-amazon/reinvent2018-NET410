@@ -1,23 +1,12 @@
 # CNI DEMO
 
-##  Setting a EKS cluster
+## Setup a EKS cluster
 
 ### Create a t2.micro instance (using AWS console)
 
 * create EC2 key pair, e.g. my-eks-key
 * create a `t2.micro` instance using AMI `ami-0965d7fbfc86df411` using `my-eks-key`
 * run `aws configure` to configure instance with right permission
-
-### clone the repo
-
-```
-git clone git@github.com:liwenwu-amazon/reinvent2018-NET410.git
-
-```
-
-```
-cd reinvent2018-NET410/eks-cni-demo
-```
 
 ### Create a EKS cluster 
 
@@ -36,8 +25,16 @@ ip-192-168-112-98.ec2.internal    Ready     <none>    14m       v1.10.3
 ip-192-168-167-201.ec2.internal   Ready     <none>    14m       v1.10.3
 ip-192-168-242-227.ec2.internal   Ready     <none>    14m       v1.10.3
 ```
-
 ### Create Pods
+
+```
+git clone git@github.com:liwenwu-amazon/reinvent2018-NET410.git
+
+```
+
+```
+cd reinvent2018-NET410/eks-cni-demo
+```
 
 ```
 kubectl apply -f worker_hello.yaml
