@@ -1,10 +1,31 @@
 # CNI DEMO
 
-##  Pre-Assumptions
+##  Setting a EKS cluster
 
-* You have created a EKS cluster (e.g. using `eksctl`)
+### Create a t2.micro instance (using AWS console)
 
-* You can ssh into your worker nodes
+* create EC2 key pair, e.g. my-eks-key
+* create a `t2.micro` instance using AMI `ami-0965d7fbfc86df411` using `my-eks-key`
+* run `aws configure` to configure instance with right permission
+
+### clone the repo
+
+```
+git clone git@github.com:liwenwu-amazon/reinvent2018-NET410.git
+
+```
+
+```
+cd reinvent2018-NET410/eks-cni-demo
+```
+
+### Create a EKS cluster 
+
+```
+# create a EKS cluster
+
+eksctl create cluster --name reinvent-eks-1 --node-type=t2.medium  --ssh-access --ssh-public-key=my-eks-key --region us-west-2
+```
 
 ## Pod Netowrk Stack Internal
 
