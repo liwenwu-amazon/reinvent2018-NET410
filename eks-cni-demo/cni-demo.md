@@ -28,7 +28,7 @@ ip-192-168-242-227.ec2.internal   Ready     <none>    14m       v1.10.3
 ### Create Pods
 
 ```
-git clone git@github.com:liwenwu-amazon/reinvent2018-NET410.git
+git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
 
 ```
 
