@@ -1,0 +1,23 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: simple-client
+  labels:
+    app: simple-client-pod
+spec:
+  replicas: 1 # tells deployment to run # pods matching the template
+  selector:
+    matchLabels:
+      app: simple-client-pod
+  template:
+    metadata:
+      labels:
+        app: simple-client-pod
+    spec:
+      containers:
+      - name: simple-client
+        image: alpine
+        command:
+          - sleep
+          - "3600"
+        imagePullPolicy: IfNotPresent

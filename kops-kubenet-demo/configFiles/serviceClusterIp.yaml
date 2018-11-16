@@ -1,0 +1,10 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: service-clusterip
+spec:
+  selector:
+    app: simple-http-server-pod
+  ports:
+  - port: 80
+    targetPort: http
