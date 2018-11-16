@@ -4,7 +4,8 @@
 
 ### Create two clusters:
 
-- Launch [AWS CloudFormation Template](https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
+- Right click on [AWS CloudFormation Template](https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json) and save the CloudFormation template (click on save link as) on your desktop
+- Open [AWS CloudFormation Console in eu-west-1 (Ireland) region](https://eu-west-1.console.aws.amazon.com/cloudformation/) and launch the CloudFomration template
 
 - AWS CloudFormation Template creates:
   - Two Amazon EC2 instances for workshop setup:

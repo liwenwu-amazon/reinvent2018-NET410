@@ -1,0 +1,11 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: service-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: simple-http-server-pod
+  ports:
+  - port: 80
+    targetPort: http
