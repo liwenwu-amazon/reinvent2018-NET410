@@ -14,7 +14,8 @@
 
 ```
 - Deploy busybox application
-- Deploy hello-world application
+- Deploy simpleHttpServer application
+- Deploy client application
 ```
 
 ### Packet flow for 3 communications pattern:
@@ -35,150 +36,22 @@
 
 ## Clone github:
 
+- Before we begin, clone reinvent2018-NET410 github repository in $HOME directory:
 ```
-[ec2-user@ip-172-31-25-39 ~]$ cd /home/ec2-user/
 [ec2-user@ip-172-31-25-39 ~]$ git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
 ```
 
-## Getting Started:
+## Workshop setup:
 
 ### Create kops cluster using [AWS CloudFormation Template](https://aws.amazon.com/cloudformation/):
 
-- **For this workshop activity, we are using AWS CloudFormation template to configure "Getting Started".**
-
-- If you have not launch the template or template did not launch successfully, you can launch AWS CloudFormation template from link below, preferrably in eu-west-1 region:
+- **For this workshop activity, we are using AWS CloudFormation template to configure workshop setup.**
+- You should have launched the template at the beginning of the session and your cluster should already be up and running
+- If you did not launch the template or template did not launch successfully, you can re-launch AWS CloudFormation template from link below. **Launch it in eu-west-1 (Ireland) region**:
 
   - [CloudFormation Template: NET410 Workshop Setup](https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
 
-### Setup environment:
-
-- Use OS/machine of your choice.
-- In this guide we are going to create a dedicated amazon ec2 instance and install necessary tools
-  - Refer to appendix A for how to create a instance for cluster operations
-
-#### Create ssh key-pair to access amazon ec2 instnace:
-
-#### Launch amazon ec2 instance (kops-setup-instance):
-
-#### Access kops-setup-instance:
-
-```
-ssh -i <path_to_your_ssh_private_kye.pem> ec2-user@<ec2-instance-public-ip>
-```
-
-#### Configure kops setup instance for AWS access:
-
-- Configure AWS CLI:
-```
-$ aws configure
-AWS Access Key ID [None]: AKIAIOSFODNN7EXAMPLE
-AWS Secret Access Key [None]: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-Default region name [None]: us-west-2
-Default output format [None]: json
-```
-
-
-#### IAM user permission:
-
-- To create kops cluster in AWS, IAM user requires following permissions:
-  - AmazonEC2FullAccess
-  - AmazonS3FullAccess
-  - IAMFullAccess
-  - AmazonVPCFullAccess
-  - AmazonRoute53FullAccess
-
-- You can add permissions to your existing users or you can create a new user.
-  - For this activity, we will create a new IAM user: 'kops'
-
-```
-aws iam create-group --group-name kops
-aws iam attach-group-policy --policy-arn arn:aws:iam::aws:policy/AmazonEC2FullAccess --group-name kops
-aws iam attach-group-policy --policy-arn arn:aws:iam::aws:policy/AmazonRoute53FullAccess --group-name kops
-aws iam attach-group-policy --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess --group-name kops
-aws iam attach-group-policy --policy-arn arn:aws:iam::aws:policy/IAMFullAccess --group-name kops
-aws iam attach-group-policy --policy-arn arn:aws:iam::aws:policy/AmazonVPCFullAccess --group-name kops
-aws iam create-user --user-name kops
-aws iam add-user-to-group --user-name kops --group-name kops
-aws iam create-access-key --user-name kops
-
-```
-
-#### DNS Setup:
-
-- Configure DNS to suite your needs.
-  - Kops 1.6.2 or later allows you to create a gossip-based cluster.
-  - If you are using gossip-based cluster, you don't need to configure DNS.
-  - When using gossip-based cluster, your cluster name should end with .k8s.local
-
-- For this activity we are going to create gossip-based cluster.
-  - Refer to Appendix B for DNS configuaration when using non gossip-based cluster
-
-#### Cluster State Storage:
-
-- Kops requires to store the state and represenation of the cluster.
-  - Create a dedicated amazon s3 bucket that kops can use for this purpose
-
-- Note:
-  - S3 requires --create-bucket-configuration LocationConstraint=<region> for regions other than us-east-1.
-  - It is STRONGLY recommend to enable versioning on your S3 bucket. Versioning allows you to revert or recover a previous state store.
-
-```
-aws s3api create-bucket --bucket net410-kops-cluster-state-store-<aws-account-id> --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
-aws s3api put-bucket-versioning --bucket net410-kops-cluster-state-store-<aws-account-id>  --versioning-configuration Status=Enabled
-```
-
-- export KOPS_STATE_STORE:
-  - Kops will use this location by default.
-  - It is recommended to save KOPS_STATE_STORE in .bash_profile or similar.
-
-```
-export KOPS_STATE_STORE=\"s3://net410-kops-cluster-state-${AWS_ACCOUNT_ID}-${AWS_DEFAULT_REGION}
-```
-
-#### Create SSH key-pair:
-
-- Create new or use existing ssh key-pair:
-  - For this activity, we will create SSH key-pair to access the cluster. You can use your own key-pair.
-
-```
-aws ec2 create-key-pair --key-name net410_clusterAdmin |jq -r '.KeyMaterial’ >net410_admin.pem
-ssh-keygen -y -f net410_admin.pem >net410_clusterAdmin.pub
-```
-
-#### Create kops cluster:
-
-- Create cluster using kops command line utility:
-
-```
-kops create cluster \
-  --name net410-kops-cluster.k8s.local \
-  --master-count 1 \
-  --master-size "t2.small" \
-  --node-count 1 \
-  --node-size "t2.small" \
-  --network-cidr "10.0.0.0/16" \
-  --zones "us-west-2a,us-west-2b,us-west-2c" \
-  --ssh-public-key "~/.ssh/k8s_admin.pub" \
-  --networking "kubenet"
-```
-
-- Create command only creates configuraiton for the cluster. It does not create any AWS cloud resources
-  - This allows you to review your cluster configure before creating resources, use following commands to review/edit your cluster:
-
-```
-kops get cluster
-kops edit cluster net410-kops-cluster.k8s.local
-kops edit ig --name net410-kops-cluster.k8s.local nodes
-kops edit ig --name net410-kops-cluster.k8s.local master-us-west-2a
-```
-
-- Create AWS cloud resources after reviewing cluster configuration
-
-```
-kops update net410-kops-cluster.k8s.local --yes
-```
-
-## kops cluster:
+## NET410 workshop activity: kops cluster
 
 ### Cluster details:
 
@@ -484,6 +357,8 @@ No resources found.
 
 ## pod-to-pod communication:
 
+![](images/pod_to_pod.png)
+
 - Create server pods:
 ```
 [ec2-user@ip-172-31-25-39 ~]$ kubectl create -f reinvent2018-NET410/kops-kubenet-demo/configFiles/simpleHttpServer.yaml
@@ -536,6 +411,8 @@ OK: 6 MiB in 19 packages
 ```
 
 ### pod-to-service communication
+
+![](images/pod_to_service.png)
 
 #### service type: ClusterIP:
 
@@ -638,7 +515,9 @@ $: curl -s 34.246.250.69:31776
 $:
 ```
 
-## pod-to-external communication:
+## external-to-internal communication:
+
+![](images/external_to_internal.png)
 
 - NodePort allows external traffic into your kubernetes cluster, however their are challenges:
   - NodePort exposes services on a standar port
@@ -715,9 +594,7 @@ kubectl delete deployment simple-client
 kops delete cluster net410-kops-cluster.k8s.local --yes
 ```
 
-### Delete Deployment:
-
-## Limitations:
+## Considerations:
 
 - Kubernetes default networking provider, kubenet, is a simple network plugin that works with various cloud providers.
 - kubenet is basic and does not many features
@@ -727,6 +604,7 @@ kops delete cluster net410-kops-cluster.k8s.local --yes
 - Cluster cannot be set up in a public-private topology in VPC
   - Public-Private topology uses multiple route tables, kubenet uses only one route table
 - Other more advanced features, such as BGP, egress control, and mesh networking, are only available with different CNI providers.
+- When it comes to network providers, their are different options. One should choose option that meets their requirements
 
 
 
