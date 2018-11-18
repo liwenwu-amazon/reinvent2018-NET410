@@ -4,35 +4,27 @@
 
 ### Create kops cluster:
 
-```
 - In public subnet
 - One master node
 - Two worker nodes across two availability zones
-```
 
 ### Deploy application across the cluster:
 
-```
 - Deploy busybox application
 - Deploy simpleHttpServer application
 - Deploy client application
-```
 
 ### Packet flow for 3 communications pattern:
 
-```
 - pod-to-pod communication
 - pod-to-service communication
 - external-to-interal communication
-```
 
 ### Understand concepts and limitations:
 
-```
 - Pods
 - Service (types: Cluster-IP, NodePort, LoadBalance, Ingress)
 - Network architecture (interfaces, bridge, route table, ip address)
-```
 
 ## Clone github:
 
@@ -56,7 +48,6 @@
 ### Cluster details:
 
 - Cluster that was created using [AWS CloudFormation](https://aws.amazon.com/cloudformation/) consists of 1 master node and 2 worker nodes.
-
 ```
 [ec2-user@ip-172-31-25-39 ~]$ kubectl cluster-info
 Kubernetes master is running at https://api-net410-kops-cluster-k-g6vaj6-9254634.eu-west-1.elb.amazonaws.com
@@ -91,7 +82,6 @@ Your cluster net410-kops-cluster.k8s.local is ready
 ```
 
 - Cluster node information:
-
 ```
 [ec2-user@ip-172-31-25-39 ~]$ kubectl get nodes
 NAME                                       STATUS   ROLES    AGE   VERSION
@@ -109,7 +99,6 @@ ip-10-1-2-141.eu-west-1.compute.internal   Ready    node     5d    v1.10.6   34.
 ```
 
 - For cluster operations, it creates pods in kube-system namespace:
-
 ```
 [ec2-user@ip-172-31-25-39 ~]$ kubectl get pods -o wide -n kube-system
 NAME                                                               READY   STATUS    RESTARTS   AGE   IP             NODE
@@ -129,7 +118,6 @@ kube-scheduler-ip-10-1-1-134.eu-west-1.compute.internal            1/1     Runni
 ```
 
 - Application is not deployed yet, hence, you won't see any pods running in default name space:
-
 ```
 [ec2-user@ip-172-31-25-39 ~]$ kubectl get pods -o wide
 No resources found.
@@ -235,7 +223,6 @@ admin@ip-10-1-1-71:~$
 
 - For this workshop will deploy busybox application using a configuraiton file.
   - Configuration files are located under reinvent2018-NET410/kops-kubenet-demo/configFiles/
-
 ```
 [ec2-user@ip-172-31-25-39 ~]$ kubectl get deployment
 No resources found.
@@ -284,7 +271,7 @@ cbr0                8000.0a5864418201 no                  veth7a165ca7
 admin@ip-10-1-1-71:~$
 ```
 
-### Pod Details:
+### Pod details:
 
 - Access the pod:
 ```
@@ -435,8 +422,7 @@ Events:            <none>
 [ec2-user@ip-172-31-25-39 ~]$
 ```
 
-- Access server pod from client pod through newly created service: service-clusterip:
-
+- Access server pod from client pod using newly created service: service-clusterip:
 ```
 / # [ec2-user@ip-172-31-25-39 ~]$ kubectl exec -ti simple-client-dd8c57f69-djpkd sh
 / # curl service-clusterip
@@ -452,8 +438,7 @@ Events:            <none>
 
 - Service of type NodePort is a ClusterIP service with an additional capability:
   - It is reachable at the IP address of the node
-  - It is reachable via assigne cluster IP
-
+  - It is reachable via assigned cluster IP
 ```
 [ec2-user@ip-172-31-25-39 ~]$ kubectl create -f reinvent2018-NET410/kops-kubenet-demo/configFiles/serviceNodePort.yaml
 service/service-nodeport created
@@ -484,8 +469,7 @@ Events:                   <none>
 [ec2-user@ip-172-31-25-39 ~]$
 ```
 
-- Access application (server pod) from client pod through node private IP using newly created service: service-nodeport:
-
+- Access application (server pod) from client pod using node private ip and newly created service: service-nodeport:
 ```
 / # [ec2-user@ip-172-31-25-39 ~]$ kubectl exec -ti simple-client-dd8c57f69-djpkd sh
 / # curl 10.1.1.71:31776
@@ -495,8 +479,8 @@ Events:                   <none>
 / #
 ```
 
-- Access application (server pod) from worker node public ip address using newly created service: service-nodeport:
-
+- Access application (server pod) externally using worker node public ip address and newly created service: service-nodeport:
+  - For this to work, one has to modify worker node security group to allow service NodePort
 ```
 $: curl -s 54.171.58.60:31776
 <p>Hello from simple-http-server-5ffccddddf-kj8cn, welcome to NET410 Workshop</p>
@@ -580,6 +564,7 @@ kubectl delete deployment simple-client
 ```
 
 ### Delete kops cluster:
+
 ```
 kops delete cluster net410-kops-cluster.k8s.local --yes
 ```
