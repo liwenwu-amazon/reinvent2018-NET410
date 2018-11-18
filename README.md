@@ -2,16 +2,21 @@
 
 ## Workshop Environment:
 
-### On Linux create ssh key-pair
+### Create ssh key-pair:
 
-- Using [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/cli-ec2-keypairs.html):
-```
-$: aws --region eu-west-1 ec2 create-key-pair --key-name mySshKey --query 'KeyMaterial' --output text > ~/.ssh/mySshKey.pem
-$: chmod 400 ~/.ssh/mySshKey.pem
-$: ssh-keygen -y -f ~/.ssh/mySshKey.pem > ~/.ssh/mySshKey.pub
-```
+- **Skip this step** if you want to use your already create ssh key-pair
 
-- Using ssh-keygen utility **Leave the passphrase empty**:
+#### Using Amazon EC2 console
+
+- To create ssh key-pair using Amazon EC2 Console, click on [Amazon EC2 console](https://eu-west-1.console.aws.amazon.com/ec2/).
+  - Verify region is set to eu-west-1 (Ireland)
+
+- Documentation can be found [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair)
+
+#### Using command prompt:
+
+- On Linux create ssh key-pair:
+  - Using ssh-keygen utility **Leave the passphrase empty**:
 ```
 $: ssh-keygen -f ~/.ssh/mySshKey -t rsa
 $: cp ~/.ssh/mySshKey ~/.ssh/mySshKey.pem
