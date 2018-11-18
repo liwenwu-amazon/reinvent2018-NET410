@@ -435,7 +435,7 @@ Events:            <none>
 [ec2-user@ip-172-31-25-39 ~]$
 ```
 
-- Access server pod from client pod through newly created service: service-clusterip:
+- Access server pod from client pod using newly created service: service-clusterip:
 
 ```
 / # [ec2-user@ip-172-31-25-39 ~]$ kubectl exec -ti simple-client-dd8c57f69-djpkd sh
@@ -452,7 +452,7 @@ Events:            <none>
 
 - Service of type NodePort is a ClusterIP service with an additional capability:
   - It is reachable at the IP address of the node
-  - It is reachable via assigne cluster IP
+  - It is reachable via assigned cluster IP
 
 ```
 [ec2-user@ip-172-31-25-39 ~]$ kubectl create -f reinvent2018-NET410/kops-kubenet-demo/configFiles/serviceNodePort.yaml
@@ -484,7 +484,7 @@ Events:                   <none>
 [ec2-user@ip-172-31-25-39 ~]$
 ```
 
-- Access application (server pod) from client pod through node private IP using newly created service: service-nodeport:
+- Access application (server pod) from client pod using node private IP and newly created service: service-nodeport:
 
 ```
 / # [ec2-user@ip-172-31-25-39 ~]$ kubectl exec -ti simple-client-dd8c57f69-djpkd sh
@@ -495,7 +495,8 @@ Events:                   <none>
 / #
 ```
 
-- Access application (server pod) from worker node public ip address using newly created service: service-nodeport:
+- Access application (server pod) externall using worker node public ip address and newly created service: service-nodeport:
+  - For this to work, one has to modify worker node security group to allow service NodePort
 
 ```
 $: curl -s 54.171.58.60:31776
