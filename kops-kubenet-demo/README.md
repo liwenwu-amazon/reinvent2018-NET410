@@ -1,4 +1,4 @@
-# kops Demo:
+# aws kops Demo:
 
 ## Objective:
 
@@ -224,16 +224,6 @@ default via 10.1.1.1 dev eth0
 100.65.130.0/24 dev cbr0  proto kernel  scope link  src 100.65.130.1
 172.17.0.0/16 dev docker0  proto kernel  scope link  src 172.17.0.1
 admin@ip-10-1-1-71:~$
-```
-
-- vethxx interfaces are for pods that are running in kube-system name space:
-```
-$: kubectl get pods -o wide --all-namespaces |grep 10-1-2-179
-kube-system   kube-dns-5fbcb4d67b-hr4vr                                         3/3     Running   0          18h   100.65.129.4   ip-10-1-2-179.us-west-2.compute.internal
-kube-system   kube-dns-autoscaler-6874c546dd-k2twt                              1/1     Running   0          2d    100.65.129.2   ip-10-1-2-179.us-west-2.compute.internal
-kube-system   kube-proxy-ip-10-1-2-179.us-west-2.compute.internal               1/1     Running   0          2d    10.1.2.179     ip-10-1-2-179.us-west-2.compute.internal
-kube-system   kubernetes-dashboard-7b9c7bc8c9-ttc7z                             1/1     Running   0          2d    100.65.129.3   ip-10-1-2-179.us-west-2.compute.internal
-$:
 ```
 
 ### Deploy application:
