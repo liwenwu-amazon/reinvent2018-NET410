@@ -284,7 +284,7 @@ cbr0                8000.0a5864418201 no                  veth7a165ca7
 admin@ip-10-1-1-71:~$
 ```
 
-### Pod Details:
+### Pod details:
 
 - Access the pod:
 ```
@@ -484,8 +484,7 @@ Events:                   <none>
 [ec2-user@ip-172-31-25-39 ~]$
 ```
 
-- Access application (server pod) from client pod using node private IP and newly created service: service-nodeport:
-
+- Access application (server pod) from client pod using node private ip and newly created service: service-nodeport:
 ```
 / # [ec2-user@ip-172-31-25-39 ~]$ kubectl exec -ti simple-client-dd8c57f69-djpkd sh
 / # curl 10.1.1.71:31776
@@ -495,9 +494,8 @@ Events:                   <none>
 / #
 ```
 
-- Access application (server pod) externall using worker node public ip address and newly created service: service-nodeport:
+- Access application (server pod) externally using worker node public ip address and newly created service: service-nodeport:
   - For this to work, one has to modify worker node security group to allow service NodePort
-
 ```
 $: curl -s 54.171.58.60:31776
 <p>Hello from simple-http-server-5ffccddddf-kj8cn, welcome to NET410 Workshop</p>
