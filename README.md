@@ -4,24 +4,13 @@
 
 ### Create ssh key-pair:
 
-- **Skip this step** if you want to use your already create ssh key-pair
+- **Skip this step** if you want to use your existing ssh key-pair
 
 #### Using Amazon EC2 console
 
 - To create ssh key-pair using Amazon EC2 Console, click on [Amazon EC2 console](https://eu-west-1.console.aws.amazon.com/ec2/).
+  - Documentation can be found [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair)
   - Verify region is set to eu-west-1 (Ireland)
-
-- Documentation can be found [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair)
-
-#### Using command prompt:
-
-- On Linux create ssh key-pair:
-  - Using ssh-keygen utility **Leave the passphrase empty**:
-```
-$: ssh-keygen -f ~/.ssh/mySshKey -t rsa
-$: cp ~/.ssh/mySshKey ~/.ssh/mySshKey.pem
-$: aws iam upload-ssh-public-key --user-name <iam-user-name> --ssh-public-key-body 'public key string'
-```
 
 ### Create two clusters:
 
