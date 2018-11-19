@@ -2,7 +2,7 @@
 
 ## Objective:
 
-* Exam major components of AWS VPC routed CNI and demonstrate how it handles traffic for:
+* Exam major components of AWS VPC routed CNI and demonstrace how it handles traffic for:
 	* Pod to Pod communication
 	* Pod to Service communication
 * Exam the communication channels between Amazon EKS Kubernetes Control Plane and Customer worker nodes.
@@ -17,9 +17,9 @@
 
   - [CloudFormation Template: NET410 Workshop Setup](https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
 
-## ssh into EKS console
+### ssh into EKS console
 
-* Find out `Eksec2Instance` and EC2 instance ID from Cloudformation resource
+* Find out `EksEC2Instance` and EC2 instance ID from Cloudformation resource
 * ssh into EKS instance
 
 ```
@@ -27,15 +27,160 @@ ssh -i <key-name>  ec2-user@ec2-xx-xx-xx-xx.eu-west-1.compute.amazonaws.com
 
 ```
 
-## Clone github:
+### Clone github:
 
 - Before we begin, clone reinvent2018-NET410 github repository in $HOME directory:
 ```
 [ec2-user@ip-172-31-25-39 ~]$ git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
 ```
 
+## NET410 workshop activity: EKS cluster
 
-## Pod Netowrk Stack Internal
+## Amazon EKS Cluster
+
+### Cluster Information
+
+- Cluster that was created using [AWS CloudFormation](https://aws.amazon.com/cloudformation/) consists of 1 master node and 2 worker nodes.
+
+#### aws eks list-clusters
+```
+aws eks list-clusters
+{
+    "clusters": [
+        "net410-eks-cluster"
+    ]
+}
+```
+
+#### aws eks describe-cluster --name net410-eks-cluster
+
+```
+aws eks describe-cluster --name net410-eks-cluster
+{
+    "cluster": {
+        "status": "ACTIVE", 
+        "endpoint": "https://C23A88F2572AAF0B1AEA36CD119D0682.yl4.eu-west-1.eks.amazonaws.com", 
+        "name": "net410-eks-cluster", 
+        "certificateAuthority": {
+            "data": "......   "
+        }, 
+        "roleArn": "arn:aws:iam::694065802095:role/eksctl-net410-eks-cluster-cluster-ServiceRole-JQP22M9HN457", 
+        "resourcesVpcConfig": {
+            "subnetIds": [
+                "subnet-03570d333db01c922", 
+                "subnet-02b0202c2159049f3", 
+                "subnet-04dfca08b2fc54441", 
+                "subnet-0ff53ecf4d71f5a60", 
+                "subnet-09d6c50e781c0e074", 
+                "subnet-01b4a2c179e95f519"
+            ], 
+            "vpcId": "vpc-09c7c672286bf7e94", 
+            "securityGroupIds": [
+                "sg-062a376f3d16fe673"
+            ]
+        }, 
+        "version": "1.10", 
+        "arn": "arn:aws:eks:eu-west-1:xxxxx:cluster/net410-eks-cluster", 
+        "createdAt": 1542590239.656
+    }
+}
+```
+
+#### Kubernetes Cluster Info
+
+```
+kubectl cluster-info
+Kubernetes master is running at https://C23A88F2572AAF0B1AEA36CD119D0682.yl4.eu-west-1.eks.amazonaws.com
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+```
+
+```
+[ec2-user@ip-172-31-9-36 ~]$ kubectl get node -o wide
+NAME                                           STATUS   ROLES    AGE   VERSION   EXTERNAL-IP   OS-IMAGE         KERNEL-VERSION               CONTAINER-RUNTIME
+ip-192-168-4-93.eu-west-1.compute.internal     Ready    <none>   15h   v1.10.3   <none>        Amazon Linux 2   4.14.72-73.55.amzn2.x86_64   docker://17.6.2
+ip-192-168-77-144.eu-west-1.compute.internal   Ready    <none>   15h   v1.10.3   <none>        Amazon Linux 2   4.14.72-73.55.amzn2.x86_64   docker://17.6.2
+```
+
+### Amazon EKS Architecture
+
+![Amazon EKS Architecture](./images/eks-arch.png)
+
+### Communication between EKS Master and Pods (e.g. kube-dns)
+
+![](./images/cross-eni.png)
+
+* kubectl logs/exec uses this channel (EKS Master -> Pods) 
+* Pods (e.g. kube-dns, aws-cni) use this channel to Read/Write/Watch Kubernetes API objects
+
+```
+
+aws ec2 describe-network-interfaces --network-interface-ids eni-0f96810f42e4f53e8 --region eu-west-1
+{
+    "NetworkInterfaces": [
+        {
+            "Attachment": {
+                "AttachTime": "2018-11-19T01:27:39.000Z",
+                "AttachmentId": "eni-attach-0b3be060aa470e238",
+                "DeleteOnTermination": true,
+                "DeviceIndex": 1,
+                "InstanceOwnerId": "298800981437",
+                "Status": "attached"
+            },
+            "AvailabilityZone": "eu-west-1a",
+            "Description": "Amazon EKS net410-eks-cluster", <-- !! Cross Account ENI
+            "Groups": [
+                {
+                    "GroupName": "eksctl-net410-eks-cluster-cluster-ControlPlaneSecurityGroup-XLHWMBXCDLTP",
+                    "GroupId": "sg-062a376f3d16fe673"
+                }
+            ],
+            "InterfaceType": "interface",
+            "Ipv6Addresses": [],
+            "MacAddress": "0a:d5:79:a1:af:50",
+            "NetworkInterfaceId": "eni-0f96810f42e4f53e8",
+            "OwnerId": "xxxx",
+            "PrivateDnsName": "ip-192-168-154-135.eu-west-1.compute.internal",
+            "PrivateIpAddress": "192.168.154.135",
+            "PrivateIpAddresses": [
+                {
+                    "Primary": true,
+                    "PrivateDnsName": "ip-192-168-154-135.eu-west-1.compute.internal",
+                    "PrivateIpAddress": "192.168.154.135"
+                }
+            ],
+            "RequesterId": "AROAIORXPPLFOF7XU4KUQ:AmazonEKS",
+            "RequesterManaged": false,
+            "SourceDestCheck": true,
+            "Status": "in-use",
+            "SubnetId": "subnet-09d6c50e781c0e074",
+            "TagSet": [],
+            "VpcId": "vpc-09c7c672286bf7e94"
+        }
+    ]
+}
+``` 
+##### Troubleshooting Tips
+
+* Misconfigured control plane security group
+	* Control plane security group is assigned to ENIs created in the worker node subnets.
+	* When launching worker nodes, control plane security group is configured to receive packets from worker nodes.
+	* if different control plane security group is specified while creating worker nodes, pods will not be able to communicate with master
+* VPC related issues 
+	* Deleting subnets in your VPC
+	* Removing Ingress and Egress required for Master and Worker node communication.
+	* Reaching ENI limits for an AWS Account.
+	* Exhausting IPs available for Cross ENI
+
+* Incorrect permissions on the role could stop AmazonEKS from managing Kubernetes clusters.
+	* Use Managed policy provided by EKS.
+	* Avoid attaching deny permissions on APIs required by AmzonEKS for managing ENIs in your VPC.
+
+	 
+       
+
+
+### Pod Netowrk Stack Internal
 
 ```
 kubectl get node
@@ -315,155 +460,6 @@ ls
 ipamd.log.2018-07-17-22  ipamd.log.2018-07-17-23  ipamd.log.2018-07-18-00  ipamd.log.2018-07-18-01  plugin.log.2018-07-18-00  plugin.log.2018-07-18-01
 ```
 
-
-## install calico policy add-on
-
-```
-kubectl apply -f calico.yaml 
-daemonset.extensions "calico-node" created
-customresourcedefinition.apiextensions.k8s.io "felixconfigurations.crd.projectcalico.org" created
-customresourcedefinition.apiextensions.k8s.io "bgpconfigurations.crd.projectcalico.org" created
-customresourcedefinition.apiextensions.k8s.io "ippools.crd.projectcalico.org" created
-customresourcedefinition.apiextensions.k8s.io "hostendpoints.crd.projectcalico.org" created
-customresourcedefinition.apiextensions.k8s.io "clusterinformations.crd.projectcalico.org" created
-customresourcedefinition.apiextensions.k8s.io "globalnetworkpolicies.crd.projectcalico.org" created
-customresourcedefinition.apiextensions.k8s.io "globalnetworksets.crd.projectcalico.org" created
-customresourcedefinition.apiextensions.k8s.io "networkpolicies.crd.projectcalico.org" created
-serviceaccount "calico-node" created
-clusterrole.rbac.authorization.k8s.io "calico-node" created
-clusterrolebinding.rbac.authorization.k8s.io "calico-node" created
-deployment.extensions "calico-typha" created
-clusterrolebinding.rbac.authorization.k8s.io "typha-cpha" created
-clusterrole.rbac.authorization.k8s.io "typha-cpha" created
-configmap "calico-typha-horizontal-autoscaler" created
-deployment.extensions "calico-typha-horizontal-autoscaler" created
-role.rbac.authorization.k8s.io "typha-cpha" created
-serviceaccount "typha-cpha" created
-rolebinding.rbac.authorization.k8s.io "typha-cpha" created
-service "calico-typha" created
- 
-```
- 
-#### Examine calico add-on  
-
-```
- kubectl get pod -n kube-system
-NAME                                                  READY     STATUS    RESTARTS   AGE
-aws-node-2c5zn                                        1/1       Running   0          3h
-aws-node-ng546                                        1/1       Running   0          3h
-aws-node-wx4nh                                        1/1       Running   1          3h
-calico-node-g779n                                     1/1       Running   0          1m
-calico-node-k2svs                                     1/1       Running   0          1m
-calico-node-wmzbw                                     1/1       Running   0          1m
-calico-typha-75667d89cb-7m4jr                         1/1       Running   0          1m
-calico-typha-horizontal-autoscaler-78f747b679-qf965   1/1       Running   0          1m
-kube-dns-64b69465b4-57l8d                             3/3       Running   0          8h
-kube-proxy-8mf7f                                      1/1       Running   0          3h
-kube-proxy-9t9n8                                      1/1       Running   0          3h
-kube-proxy-nmnz9                                      1/1       Running   0          3h
-```    
-
-### [Simple Policy Demo](https://docs.projectcalico.org/v3.0/getting-started/kubernetes/tutorials/simple-policy)
-
-#### Configure Namespaces
-```
-kubectl create ns policy-demo
-```
-
-#### Create demo pods
-
-```
-# Run the Pods.
-kubectl run --namespace=policy-demo nginx --replicas=2 --image=nginx
-
-# Create the Service.
-kubectl expose --namespace=policy-demo deployment nginx --port=80
-```
-
-```
-# Run a Pod and try to access the `nginx` Service.
-$ kubectl run --namespace=policy-demo access --rm -ti --image busybox /bin/sh
-Waiting for pod policy-demo/access-472357175-y0m47 to be running, status is Pending, pod ready: false
-
-If you don't see a command prompt, try pressing enter.
-
-/ # wget -q nginx -O -
-```
-
-```
-# enable isolation
-kubectl create -f - <<EOF
-kind: NetworkPolicy
-apiVersion: extensions/v1beta1
-metadata:
-  name: default-deny
-  namespace: policy-demo
-spec:
-  podSelector:
-    matchLabels: {}
-EOF
-```
-
-```
-# test isolation
-# Run a Pod and try to access the `nginx` Service.
-$ kubectl run --namespace=policy-demo access --rm -ti --image busybox /bin/sh
-Waiting for pod policy-demo/access-472357175-y0m47 to be running, status is Pending, pod ready: false
-
-If you don't see a command prompt, try pressing enter.
-
-/ # wget -q --timeout=5 nginx -O -
-wget: download timed out
-/ #
-```
-
-```
-Allow Access using a Network Policy
-kubectl create -f - <<EOF
-kind: NetworkPolicy
-apiVersion: extensions/v1beta1
-metadata:
-  name: access-nginx
-  namespace: policy-demo
-spec:
-  podSelector:
-    matchLabels:
-      run: nginx
-  ingress:
-    - from:
-      - podSelector:
-          matchLabels:
-            run: access
-EOF
-```
-
-```
-# with label is able to access nginx
-# Run a Pod and try to access the `nginx` Service.
-$ kubectl run --namespace=policy-demo access --rm -ti --image busybox /bin/sh
-Waiting for pod policy-demo/access-472357175-y0m47 to be running, status is Pending, pod ready: false
-
-If you don't see a command prompt, try pressing enter.
-
-/ # wget -q --timeout=5 nginx -O -
-```
-
-```
-# Run a Pod without label and try to access the `nginx` Service.
-$ kubectl run --namespace=policy-demo cant-access --rm -ti --image busybox /bin/sh
-Waiting for pod policy-demo/cant-access-472357175-y0m47 to be running, status is Pending, pod ready: false
-
-If you don't see a command prompt, try pressing enter.
-
-/ # wget -q --timeout=5 nginx -O -
-wget: download timed out
-/ #
-```
-
-```
-# cleanup
-kubectl delete ns policy-demo
-```
 
 
 
