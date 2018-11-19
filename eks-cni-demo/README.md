@@ -2,7 +2,7 @@
 
 ## Objective:
 
-* Exam major components of AWS VPC routed CNI and demonstrace how it handles traffic for:
+* Exam major components of AWS VPC routed CNI and demonstrate how it handles traffic for:
 	* Pod to Pod communication
 	* Pod to Service communication
 * Exam the communication channels between Amazon EKS Kubernetes Control Plane and Customer worker nodes.
@@ -123,8 +123,8 @@ ip-192-168-77-144.eu-west-1.compute.internal   Ready    <none>   15h   v1.10.3  
 * kubectl logs/exec uses this channel (EKS Master -> Pods) 
 * Pods (e.g. kube-dns, aws-cni) use this channel to Read/Write/Watch Kubernetes API objects
 
+#### Cross Account ENI 
 ```
-
 aws ec2 describe-network-interfaces --network-interface-ids eni-0f96810f42e4f53e8 --region eu-west-1
 {
     "NetworkInterfaces": [
@@ -227,7 +227,7 @@ worker-hello-5d9b798f74-zk7c7   1/1     Running   0          1m    192.168.9.15 
 kubectl exec -ti worker-hello-5d9b798f74-2gnkc sh
 ```
 
-#### intra-node, Pod to Pod Ping
+#### Intra-node, Pod to Pod Ping
 ```
 /go # ping 192.168.3.24
 PING 192.168.3.24 (192.168.3.24): 56 data bytes
@@ -298,6 +298,8 @@ lo        Link encap:Local Loopback
 ```
 
 #### showing pod route table
+
+* All Pod's outgoing traffic will be sent out Pod's `eth0` interface
 
 ```
 ip route
@@ -389,7 +391,7 @@ Complete!
 
 #### Route Table for to-Pod traffic
 
-#####  Pod `192.168.7.62`(worker-hello-5d9b798f74-72q5t) is attached to `eni6a241e7f902` 
+#####  Pod `192.168.7.62`(worker-hello-5d9b798f74-72q5t) is attached to Linux *veth*: `eni6a241e7f902` 
 
 ```
 ip route
@@ -408,9 +410,10 @@ default via 192.168.0.1 dev eth0
 ```
 
 #### Route Table for from-Pod Traffic
+* Program Pod's static ARP table with veth's MAC address, so that Pod knows how to resolve its default gateway's MAC
 
 ```
-# mac address matches Pod's ARP entry, 
+# mac address (7e:3d:34:ba:01:5c) matches Pod's ARP entry.
 
 [ec2-user@ip-192-168-4-93 ~]$ ifconfig eni6a241e7f902
 eni6a241e7f902: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
@@ -423,6 +426,8 @@ eni6a241e7f902: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 
 ``` 
 
+* Policy Routing is used to enforce Pod's outgoing traffic is sent out through the ENI that Pod's IP belongs to 
+ 
 ```
 # Poicy routing
 [ec2-user@ip-192-168-4-93 ~]$ ip rule show
@@ -454,7 +459,7 @@ default via 192.168.128.1 dev eth1 <-- outgoing eth1
 
 #### exam Pod's traffic 
 
-#####  ping from Pod (192.168.7.62) to Pod (192.168.79.49)
+#####  ping from Pod (192.168.7.62) on node (ip-192-168-4-93) to Pod (192.168.79.49) on node (ip-192-168-77-144)
 
 ```
  kubectl exec -ti worker-hello-5d9b798f74-2gnkc  sh
@@ -470,9 +475,9 @@ PING 192.168.79.49 (192.168.79.49): 56 data bytes
 
 ```
 
-##### Open a send window and ssh into the worker node
+##### Open a second window and ssh into the worker node
 
-##### Exam packet on veth `eni6a241e7f902`
+##### Exam packet on Pod's veth interface `eni6a241e7f902`
 ```
 sudo tcpdump -i eni6a241e7f902
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
@@ -508,7 +513,9 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
 
 ![](./images/service.png)
 
-#### Kubernetes Services
+#### Kubernetes Service
+Kubernetes is a service that Pods such as `kube-dns` can Read/Write/Watch Kubernetes API objects
+
 ```
 kubectl get service
 NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
@@ -535,6 +542,8 @@ Events:            <none>
 ```
 
 #### IPtables for Kubernetes Service
+
+* IPtables is used to handle Pod to service traffic
 
 ##### ssh into worker node
 
