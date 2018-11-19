@@ -227,7 +227,7 @@ worker-hello-5d9b798f74-zk7c7   1/1     Running   0          1m    192.168.9.15 
 kubectl exec -ti worker-hello-5d9b798f74-2gnkc sh
 ```
 
-##### intra-node, Pod to Pod Ping
+#### intra-node, Pod to Pod Ping
 ```
 /go # ping 192.168.3.24
 PING 192.168.3.24 (192.168.3.24): 56 data bytes
@@ -238,7 +238,7 @@ PING 192.168.3.24 (192.168.3.24): 56 data bytes
 2 packets transmitted, 2 packets received, 0% packet loss
 round-trip min/avg/max = 0.076/0.076/0.076 ms
 ```
-##### Inter-node Pod to Pod Ping
+#### Inter-node Pod to Pod Ping
 ```
 /go # ping 192.168.66.62
 PING 192.168.66.62 (192.168.66.62): 56 data bytes
@@ -250,7 +250,7 @@ PING 192.168.66.62 (192.168.66.62): 56 data bytes
 round-trip min/avg/max = 0.813/0.878/0.943 ms
 ```
 
-##### Pod to External Ping
+#### Pod to External Ping
 ```
 ping www.yahoo.com
 PING www.yahoo.com (87.248.98.7): 56 data bytes
@@ -262,29 +262,31 @@ PING www.yahoo.com (87.248.98.7): 56 data bytes
 round-trip min/avg/max = 1.212/1.213/1.215 ms
 ```
 
-#### CNI Network Internal: Data Plane
+### CNI Network Internal: Data Plane
 
 ![](./images/dataplan.png)
 
-
+### Life of a Ping Packet
+![](./images/life-of-packet.png)
 
 ### Inside Pod
+
+notes: the following are data from my setup. 
 
 ```
  kubectl exec -ti worker-hello-5d9b798f74-72q5t sh
 ```
 
-#### showing Pod IP
-
+#### `192.168.7.62` is the secondary IP addess from ENI
 ```
-ifconfig
-eth0      Link encap:Ethernet  HWaddr 2E:9F:31:AB:BB:33  
-          inet addr:192.168.130.206  Bcast:192.168.130.206  Mask:255.255.255.255
+/go # ifconfig
+eth0      Link encap:Ethernet  HWaddr EE:0A:C5:67:B7:90  
+          inet addr:192.168.7.62  Bcast:192.168.7.62  Mask:255.255.255.255
           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:12 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          RX packets:35 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:21 errors:0 dropped:0 overruns:0 carrier:0
           collisions:0 txqueuelen:0 
-          RX bytes:936 (936.0 B)  TX bytes:0 (0.0 B)
+          RX bytes:3754 (3.6 KiB)  TX bytes:1814 (1.7 KiB)
 
 lo        Link encap:Local Loopback  
           inet addr:127.0.0.1  Mask:255.0.0.0
@@ -306,207 +308,600 @@ default via 169.254.1.1 dev eth0
 #### showing pod arp table
 
 ```
-arp -a
-? (169.254.1.1) at 26:50:08:03:3e:a6 [ether] PERM on eth0
-? (169.254.1.1) at 26:50:08:03:3e:a6 [ether] PERM on eth0
+/go # arp
+ip-192-168-4-93.eu-west-1.compute.internal (192.168.4.93) at 7e:3d:34:ba:01:5c [ether]  on eth0
+? (169.254.1.1) at 7e:3d:34:ba:01:5c [ether] PERM on eth0
 ```
 
-### ssh into worker
+### Inside Worker
 
-***make sure opening ssh port !***
+#### ssh into a worker node
+```
+ssh -i <your-key-name> ec2-user@34.245.125.220
+The authenticity of host '34.245.125.220 (34.245.125.220)' can't be established.
+ECDSA key fingerprint is SHA256:vVZkTtTkE06bGK0vBtKJPjUv1HzBi/UFwmXOLd/Eysg.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added '34.245.125.220' (ECDSA) to the list of known hosts.
+Last login: Tue Oct 23 20:46:31 2018 from 205.251.233.51
 
-#### showing route table to Pod traffic
+       __|  __|_  )
+       _|  (     /   Amazon Linux 2 AMI
+      ___|\___|___|
+
+https://aws.amazon.com/amazon-linux-2/
+
+```
+
+#### Install tcpdump 
+```
+sudo yum install tcpdump
+Loaded plugins: priorities, update-motd
+amzn2-core                                                                                                                                                                                                              | 2.4 kB  00:00:00     
+amzn2extra-docker                                                                                                                                                                                                       | 1.3 kB  00:00:00     
+Resolving Dependencies
+--> Running transaction check
+---> Package tcpdump.x86_64 14:4.9.2-3.amzn2 will be installed
+--> Processing Dependency: libpcap >= 14:1.5.3-10 for package: 14:tcpdump-4.9.2-3.amzn2.x86_64
+--> Processing Dependency: libpcap.so.1()(64bit) for package: 14:tcpdump-4.9.2-3.amzn2.x86_64
+--> Running transaction check
+---> Package libpcap.x86_64 14:1.5.3-11.amzn2 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+===============================================================================================================================================================================================================================================
+ Package                                                Arch                                                  Version                                                          Repository                                                 Size
+===============================================================================================================================================================================================================================================
+Installing:
+ tcpdump                                                x86_64                                                14:4.9.2-3.amzn2                                                 amzn2-core                                                428 k
+Installing for dependencies:
+ libpcap                                                x86_64                                                14:1.5.3-11.amzn2                                                amzn2-core                                                140 k
+
+Transaction Summary
+===============================================================================================================================================================================================================================================
+Install  1 Package (+1 Dependent package)
+
+Total download size: 568 k
+Installed size: 1.3 M
+Is this ok [y/d/N]: y
+Downloading packages:
+(1/2): libpcap-1.5.3-11.amzn2.x86_64.rpm                                                                                                                                                                                | 140 kB  00:00:00     
+(2/2): tcpdump-4.9.2-3.amzn2.x86_64.rpm                                                                                                                                                                                 | 428 kB  00:00:00     
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                                                                                                          7.6 MB/s | 568 kB  00:00:00     
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : 14:libpcap-1.5.3-11.amzn2.x86_64                                                                                                                                                                                            1/2 
+  Installing : 14:tcpdump-4.9.2-3.amzn2.x86_64                                                                                                                                                                                             2/2 
+  Verifying  : 14:libpcap-1.5.3-11.amzn2.x86_64                                                                                                                                                                                            1/2 
+  Verifying  : 14:tcpdump-4.9.2-3.amzn2.x86_64                                                                                                                                                                                             2/2 
+
+Installed:
+  tcpdump.x86_64 14:4.9.2-3.amzn2                                                                                                                                                                                                              
+
+Dependency Installed:
+  libpcap.x86_64 14:1.5.3-11.amzn2                                                                                                                                                                                                             
+
+Complete!
+```
+
+#### Route Table for to-Pod traffic
+
+#####  Pod `192.168.7.62`(worker-hello-5d9b798f74-72q5t) is attached to `eni6a241e7f902` 
+
 ```
 ip route
-default via 192.168.128.1 dev eth0 
+default via 192.168.0.1 dev eth0 
 169.254.169.254 dev eth0 
 172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown 
-192.168.128.0/18 dev eth0 proto kernel scope link src 192.168.167.201 
-192.168.130.206 dev eni61b9c53e3d2 scope link <------ Pod
-192.168.141.2 dev eni3fd21969a5d scope link 
-192.168.157.205 dev enid01321d94b0 scope link 
+192.168.0.0/19 dev eth0 proto kernel scope link src 192.168.4.93 
+192.168.3.24 dev eni1f29a933002 scope link 
+192.168.7.54 dev eni5eaa472d76b scope link 
+192.168.7.62 dev eni6a241e7f902 scope link <-- worker-hello-5d9b798f74-72q5t
+192.168.9.15 dev eni3ba2d1492d5 scope link 
+192.168.10.216 dev enidcee159cf44 scope link 
+192.168.20.139 dev eniccbdba09bad scope link 
+192.168.24.73 dev enie96d6354f21 scope link 
+192.168.29.205 dev eni8a6f029b3bc scope link 
 ```
 
-#### showing route table from Pod Traffic
+#### Route Table for from-Pod Traffic
 
 ```
 # mac address matches Pod's ARP entry, 
 
-ifconfig eni61b9c53e3d2
-eni61b9c53e3d2: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-        inet6 fe80::2450:8ff:fe03:3ea6  prefixlen 64  scopeid 0x20<link>
-        ether 26:50:08:03:3e:a6  txqueuelen 0  (Ethernet) <-- match Pod's ARP
-        RX packets 2  bytes 126 (126.0 B)
+[ec2-user@ip-192-168-4-93 ~]$ ifconfig eni6a241e7f902
+eni6a241e7f902: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet6 fe80::7c3d:34ff:feba:15c  prefixlen 64  scopeid 0x20<link>
+        ether 7e:3d:34:ba:01:5c  txqueuelen 0  (Ethernet)
+        RX packets 24  bytes 2025 (1.9 KiB)
         RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 15  bytes 1191 (1.1 KiB)
+        TX packets 39  bytes 4150 (4.0 KiB)
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
 ``` 
 
 ```
-# choose route table
-ip rule show
+# Poicy routing
+[ec2-user@ip-192-168-4-93 ~]$ ip rule show
 0:	from all lookup local 
-512:	from all to 192.168.141.2 lookup main 
-512:	from all to 192.168.157.205 lookup main 
-512:	from all to 192.168.130.206 lookup main 
+512:	from all to 192.168.24.73 lookup main 
+512:	from all to 192.168.29.205 lookup main 
+512:	from all to 192.168.7.62 lookup main 
+512:	from all to 192.168.9.15 lookup main 
+512:	from all to 192.168.7.54 lookup main 
+512:	from all to 192.168.3.24 lookup main 
+512:	from all to 192.168.10.216 lookup main 
+512:	from all to 192.168.20.139 lookup main 
 1024:	not from all to 192.168.0.0/16 lookup main 
-1536:	from 192.168.157.205 lookup 3 
-1536:	from 192.168.130.206 lookup 3 <-- Pod is using route table 3
+1024:	from all fwmark 0x80/0x80 lookup main 
+1536:	from 192.168.3.24 lookup 2 <-- these Pods uses IPs from secondary ENI (eth1)
+1536:	from 192.168.10.216 lookup 2 
+1536:	from 192.168.20.139 lookup 2 
 32766:	from all lookup main 
 32767:	from all lookup default  
 ```
 
 ```
-# show route table 3
+# show route table 2
 
-ip route show table 3
-default via 192.168.128.1 dev eth2 <-- outgoing eth2
-192.168.128.1 dev eth2 scope link
+ip route show table 2
+default via 192.168.128.1 dev eth1 <-- outgoing eth1
+192.168.128.1 dev eth1 scope link
 ```
 
-#### exam Pod's traffic
+#### exam Pod's traffic 
+
+#####  ping from Pod (192.168.7.62) to Pod (192.168.79.49)
 
 ```
-yum install -y tcpdump
-```
+ kubectl exec -ti worker-hello-5d9b798f74-2gnkc  sh
+ 
+ /go # ping 192.168.79.49
+PING 192.168.79.49 (192.168.79.49): 56 data bytes
+64 bytes from 192.168.79.49: seq=0 ttl=253 time=0.788 ms
+64 bytes from 192.168.79.49: seq=1 ttl=253 time=0.785 ms
+64 bytes from 192.168.79.49: seq=2 ttl=253 time=0.913 ms
+64 bytes from 192.168.79.49: seq=3 ttl=253 time=0.886 ms
+64 bytes from 192.168.79.49: seq=4 ttl=253 time=0.909 ms
+64 bytes from 192.168.79.49: seq=5 ttl=253 time=0.927 ms
 
 ```
-tcpdump -i eni61b9c53e3d2
+
+##### Open a send window and ssh into the worker node
+
+##### Exam packet on veth `eni6a241e7f902`
+```
+sudo tcpdump -i eni6a241e7f902
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
-listening on eni61b9c53e3d2, link-type EN10MB (Ethernet), capture size 262144 bytes
-01:39:03.397833 IP ip-192-168-130-206.ec2.internal > ip-192-168-247-50.ec2.internal: ICMP echo request, id 3840, seq 0, length 64
-01:39:03.398613 IP ip-192-168-247-50.ec2.internal > ip-192-168-130-206.ec2.internal: ICMP echo reply, id 3840, seq 0, length 64
-01:39:04.398000 IP ip-192-168-130-206.ec2.internal > ip-192-168-247-50.ec2.internal: ICMP echo request, id 3840, seq 1, length 64
-01:39:04.398789 IP ip-192-168-247-50.ec2.internal > ip-192-168-130-206.ec2.internal: ICMP echo reply, id 3840, seq 1, length 64
-01:39:08.413836 ARP, Request who-has ip-192-168-130-206.ec2.internal tell ip-192-168-167-201.ec2.internal, length 28
-01:39:08.413889 ARP, Reply ip-192-168-130-206.ec2.internal is-at 2e:9f:31:ab:bb:33 (oui Unknown), length 28
-```
-
-```
-# inside pod
-ping 192.168.247.50
-PING 192.168.247.50 (192.168.247.50): 56 data bytes
-64 bytes from 192.168.247.50: seq=0 ttl=253 time=0.822 ms
-64 bytes from 192.168.247.50: seq=1 ttl=253 time=0.879 ms
+listening on eni6a241e7f902, link-type EN10MB (Ethernet), capture size 262144 bytes
+20:10:51.935972 IP ip-192-168-7-62.eu-west-1.compute.internal > ip-192-168-79-49.eu-west-1.compute.internal: ICMP echo request, id 3584, seq 31, length 64
+20:10:51.936866 IP ip-192-168-79-49.eu-west-1.compute.internal > ip-192-168-7-62.eu-west-1.compute.internal: ICMP echo reply, id 3584, seq 31, length 64
+20:10:52.936154 IP ip-192-168-7-62.eu-west-1.compute.internal > ip-192-168-79-49.eu-west-1.compute.internal: ICMP echo request, id 3584, seq 32, length 64
+20:10:52.936929 IP ip-192-168-79-49.eu-west-1.compute.internal > ip-192-168-7-62.eu-west-1.compute.internal: ICMP echo reply, id 3584, seq 32, length 64
 ^C
---- 192.168.247.50 ping statistics ---
-2 packets transmitted, 2 packets received, 0% packet loss
-round-trip min/avg/max = 0.822/0.850/0.879 ms
+4 packets captured
+4 packets received by filter
+0 packets dropped by kernel
 ```
 
-## Troubleshooting CNI
-
-### CNI not starting
+##### Exam Ping packet on eth0  for ICMP packet (!make sure only exam icmp)
 ```
-kubectl get ds -n kube-system
-NAME         DESIRED   CURRENT   READY     UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
-aws-node     3         3         3         3            3           <none>          8h
-kube-proxy   3         3         3         3            3           <none>          8h
-```
-
-```
-kubectl get pod -n kube-system
-NAME                        READY     STATUS    RESTARTS   AGE
-aws-node-2c5zn              1/1       Running   0          3h
-aws-node-ng546              1/1       Running   0          3h
-aws-node-wx4nh              1/1       Running   1          3h
-kube-dns-64b69465b4-57l8d   3/3       Running   0          8h
-kube-proxy-8mf7f            1/1       Running   0          3h
-kube-proxy-9t9n8            1/1       Running   0          3h
-kube-proxy-nmnz9            1/1       Running   0          3h
+[ec2-user@ip-192-168-4-93 ~]$ sudo tcpdump -i eth0 icmp
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
+20:12:50.955549 IP ip-192-168-7-62.eu-west-1.compute.internal > ip-192-168-79-49.eu-west-1.compute.internal: ICMP echo request, id 3584, seq 150, length 64
+20:12:50.956252 IP ip-192-168-79-49.eu-west-1.compute.internal > ip-192-168-7-62.eu-west-1.compute.internal: ICMP echo reply, id 3584, seq 150, length 64
+20:12:51.955701 IP ip-192-168-7-62.eu-west-1.compute.internal > ip-192-168-79-49.eu-west-1.compute.internal: ICMP echo request, id 3584, seq 151, length 64
+20:12:51.956463 IP ip-192-168-79-49.eu-west-1.compute.internal > ip-192-168-7-62.eu-west-1.compute.internal: ICMP echo reply, id 3584, seq 151, length 64
+20:12:52.955856 IP ip-192-168-7-62.eu-west-1.compute.internal > ip-192-168-79-49.eu-west-1.compute.internal: ICMP echo request, id 3584, seq 152, length 64
+20:12:52.956634 IP ip-192-168-79-49.eu-west-1.compute.internal > ip-192-168-7-62.eu-west-1.compute.internal: ICMP echo reply, id 3584, seq 152, length 64
+^C
+6 packets captured
+6 packets received by filter
+0 packets dropped by kernel
 ```
 
-* EKS, security group given to (aws eks create-cluster...) is not right
-* worker node have proxy setup
-* worker node have taint
+### Pod to Service Communication
 
+![](./images/service.png)
+
+#### Kubernetes Services
 ```
-# find out kubernet SVC
-kubectl get svc
+kubectl get service
 NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
-kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   8h
+kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   18h
 ```
 
-```
-#inside worker node
-yum install -y telnet
-
-# check if can reach k8s control plane
-telnet 10.100.0.1 443
-Trying 10.100.0.1...
-Connected to 10.100.0.1.
-Escape character is '^]'.
-```
-
-### key cni debug command
+#### Kubernetes Service EndPoints (EKS masters)
 
 ```
-# /opt/cni/bin/aws-cni-support.sh
-curl http://localhost:61678/v1/enis | python -m json.tool
- % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+[ec2-user@ip-172-31-9-36 ~]$ kubectl describe service kubernetes
+Name:              kubernetes
+Namespace:         default
+Labels:            component=apiserver
+                   provider=kubernetes
+Annotations:       <none>
+Selector:          <none>
+Type:              ClusterIP
+IP:                10.100.0.1
+Port:              https  443/TCP
+TargetPort:        443/TCP
+Endpoints:         192.168.119.102:443,192.168.154.135:443 <-- cross ENIs for EKS masters
+Session Affinity:  ClientIP
+Events:            <none>
+```
+
+#### IPtables for Kubernetes Service
+
+##### ssh into worker node
+
+##### Display Linux IP tables
+
+```
+[ec2-user@ip-192-168-4-93 ~]$sudo iptables-save
+# Generated by iptables-save v1.4.21 on Mon Nov 19 20:27:10 2018
+*mangle
+:PREROUTING ACCEPT [604975:226116018]
+:INPUT ACCEPT [603197:225965893]
+:FORWARD ACCEPT [1778:150125]
+:OUTPUT ACCEPT [572775:69717956]
+:POSTROUTING ACCEPT [574553:69868081]
+-A PREROUTING -i eth0 -m comment --comment "AWS, primary ENI" -m addrtype --dst-type LOCAL --limit-iface-in -j CONNMARK --set-xmark 0x80/0x80
+-A PREROUTING -i eni+ -m comment --comment "AWS, primary ENI" -j CONNMARK --restore-mark --nfmask 0x80 --ctmask 0x80
+COMMIT
+# Completed on Mon Nov 19 20:27:10 2018
+# Generated by iptables-save v1.4.21 on Mon Nov 19 20:27:10 2018
+*nat
+:PREROUTING ACCEPT [0:0]
+:INPUT ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+:DOCKER - [0:0]
+:KUBE-MARK-DROP - [0:0]
+:KUBE-MARK-MASQ - [0:0]
+:KUBE-NODEPORTS - [0:0]
+:KUBE-POSTROUTING - [0:0]
+:KUBE-SEP-2NU4G5DQKUWR2CN3 - [0:0]
+:KUBE-SEP-SBYITFTVBG66OBOJ - [0:0]
+:KUBE-SEP-U7PHXUKERII2F73Z - [0:0]
+:KUBE-SEP-VM7IXZRFNUK7QDNK - [0:0]
+:KUBE-SERVICES - [0:0]
+:KUBE-SVC-ERIFXISQEP7F7OF4 - [0:0]
+:KUBE-SVC-NPX46M4PTMTKRN6Y - [0:0]
+:KUBE-SVC-TCOU7JCQXEZGVUNU - [0:0]
+-A PREROUTING -m comment --comment "kubernetes service portals" -j KUBE-SERVICES
+-A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+-A OUTPUT -m comment --comment "kubernetes service portals" -j KUBE-SERVICES
+-A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -j DOCKER
+-A POSTROUTING -m comment --comment "kubernetes postrouting rules" -j KUBE-POSTROUTING
+-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
+-A POSTROUTING ! -d 192.168.0.0/16 -m comment --comment "AWS, SNAT" -m addrtype ! --dst-type LOCAL -j SNAT --to-source 192.168.4.93
+-A DOCKER -i docker0 -j RETURN
+-A KUBE-MARK-DROP -j MARK --set-xmark 0x8000/0x8000
+-A KUBE-MARK-MASQ -j MARK --set-xmark 0x4000/0x4000
+-A KUBE-POSTROUTING -m comment --comment "kubernetes service traffic requiring SNAT" -m mark --mark 0x4000/0x4000 -j MASQUERADE
+-A KUBE-SEP-2NU4G5DQKUWR2CN3 -s 192.168.64.27/32 -m comment --comment "kube-system/kube-dns:dns-tcp" -j KUBE-MARK-MASQ
+-A KUBE-SEP-2NU4G5DQKUWR2CN3 -p tcp -m comment --comment "kube-system/kube-dns:dns-tcp" -m tcp -j DNAT --to-destination 192.168.64.27:53
+-A KUBE-SEP-SBYITFTVBG66OBOJ -s 192.168.64.27/32 -m comment --comment "kube-system/kube-dns:dns" -j KUBE-MARK-MASQ
+-A KUBE-SEP-SBYITFTVBG66OBOJ -p udp -m comment --comment "kube-system/kube-dns:dns" -m udp -j DNAT --to-destination 192.168.64.27:53
+-A KUBE-SEP-U7PHXUKERII2F73Z -s 192.168.119.102/32 -m comment --comment "default/kubernetes:https" -j KUBE-MARK-MASQ
+-A KUBE-SEP-U7PHXUKERII2F73Z -p tcp -m comment --comment "default/kubernetes:https" -m recent --set --name KUBE-SEP-U7PHXUKERII2F73Z --mask 255.255.255.255 --rsource -m tcp -j DNAT --to-destination 192.168.119.102:443
+-A KUBE-SEP-VM7IXZRFNUK7QDNK -s 192.168.154.135/32 -m comment --comment "default/kubernetes:https" -j KUBE-MARK-MASQ
+-A KUBE-SEP-VM7IXZRFNUK7QDNK -p tcp -m comment --comment "default/kubernetes:https" -m recent --set --name KUBE-SEP-VM7IXZRFNUK7QDNK --mask 255.255.255.255 --rsource -m tcp -j DNAT --to-destination 192.168.154.135:443
+-A KUBE-SERVICES -d 10.100.0.1/32 -p tcp -m comment --comment "default/kubernetes:https cluster IP" -m tcp --dport 443 -j KUBE-SVC-NPX46M4PTMTKRN6Y
+-A KUBE-SERVICES -d 10.100.0.10/32 -p udp -m comment --comment "kube-system/kube-dns:dns cluster IP" -m udp --dport 53 -j KUBE-SVC-TCOU7JCQXEZGVUNU
+-A KUBE-SERVICES -d 10.100.0.10/32 -p tcp -m comment --comment "kube-system/kube-dns:dns-tcp cluster IP" -m tcp --dport 53 -j KUBE-SVC-ERIFXISQEP7F7OF4
+-A KUBE-SERVICES -m comment --comment "kubernetes service nodeports; NOTE: this must be the last rule in this chain" -m addrtype --dst-type LOCAL -j KUBE-NODEPORTS
+-A KUBE-SVC-ERIFXISQEP7F7OF4 -m comment --comment "kube-system/kube-dns:dns-tcp" -j KUBE-SEP-2NU4G5DQKUWR2CN3
+-A KUBE-SVC-NPX46M4PTMTKRN6Y -m comment --comment "default/kubernetes:https" -m recent --rcheck --seconds 10800 --reap --name KUBE-SEP-U7PHXUKERII2F73Z --mask 255.255.255.255 --rsource -j KUBE-SEP-U7PHXUKERII2F73Z
+-A KUBE-SVC-NPX46M4PTMTKRN6Y -m comment --comment "default/kubernetes:https" -m recent --rcheck --seconds 10800 --reap --name KUBE-SEP-VM7IXZRFNUK7QDNK --mask 255.255.255.255 --rsource -j KUBE-SEP-VM7IXZRFNUK7QDNK
+-A KUBE-SVC-NPX46M4PTMTKRN6Y -m comment --comment "default/kubernetes:https" -m statistic --mode random --probability 0.50000000000 -j KUBE-SEP-U7PHXUKERII2F73Z
+-A KUBE-SVC-NPX46M4PTMTKRN6Y -m comment --comment "default/kubernetes:https" -j KUBE-SEP-VM7IXZRFNUK7QDNK
+-A KUBE-SVC-TCOU7JCQXEZGVUNU -m comment --comment "kube-system/kube-dns:dns" -j KUBE-SEP-SBYITFTVBG66OBOJ
+COMMIT
+# Completed on Mon Nov 19 20:27:10 2018
+# Generated by iptables-save v1.4.21 on Mon Nov 19 20:27:10 2018
+*filter
+:INPUT ACCEPT [41:6221]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [33:4352]
+:KUBE-EXTERNAL-SERVICES - [0:0]
+:KUBE-FIREWALL - [0:0]
+:KUBE-FORWARD - [0:0]
+:KUBE-SERVICES - [0:0]
+-A INPUT -m conntrack --ctstate NEW -m comment --comment "kubernetes externally-visible service portals" -j KUBE-EXTERNAL-SERVICES
+-A INPUT -j KUBE-FIREWALL
+-A FORWARD -m comment --comment "kubernetes forwarding rules" -j KUBE-FORWARD
+-A OUTPUT -m conntrack --ctstate NEW -m comment --comment "kubernetes service portals" -j KUBE-SERVICES
+-A OUTPUT -j KUBE-FIREWALL
+-A KUBE-FIREWALL -m comment --comment "kubernetes firewall for dropping marked packets" -m mark --mark 0x8000/0x8000 -j DROP
+-A KUBE-FORWARD -m comment --comment "kubernetes forwarding rules" -m mark --mark 0x4000/0x4000 -j ACCEPT
+COMMIT
+# Completed on Mon Nov 19 20:27:10 2018
+
+```
+
+### CNI Network Internals - Control Plane
+
+![](./images/control.png)
+
+
+#### Display ipamD IP Warm Pool
+
+##### ENIs
+
+```
+[ec2-user@ip-192-168-4-93 bin]$ curl http://localhost:61678/v1/enis | python -m json.tool
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100   675  100   675    0     0    675      0  0:00:01 --:--:--  0:00:01  131k
+100   967  100   967    0     0    967      0  0:00:01 --:--:--  0:00:01  188k
 {
-    "AssignedIPs": 3,
+    "AssignedIPs": 8,
     "ENIIPPools": {
-        "eni-001197a0eeab79df8": {
-            "AssignedIPv4Addresses": 1,
+        "eni-0334a44d21188bd24": {
+            "AssignedIPv4Addresses": 5,
             "DeviceNumber": 0,
-            "ID": "eni-001197a0eeab79df8",
+            "ID": "eni-0334a44d21188bd24",
             "IPv4Addresses": {
-                "192.168.141.2": {
+                "192.168.24.73": {
                     "Assigned": true
                 },
-                "192.168.145.92": {
-                    "Assigned": false
+                "192.168.29.205": {
+                    "Assigned": true
                 },
-                "192.168.155.88": {
-                    "Assigned": false
+                "192.168.7.54": {
+                    "Assigned": true
                 },
-                "192.168.160.34": {
-                    "Assigned": false
+                "192.168.7.62": {
+                    "Assigned": true
                 },
-                "192.168.172.159": {
-                    "Assigned": false
+                "192.168.9.15": {
+                    "Assigned": true
                 }
             },
             "IsPrimary": true
         },
-        "eni-0d7778f429dda454f": {
-            "AssignedIPv4Addresses": 2,
+        "eni-0458b317b891b1d40": {
+            "AssignedIPv4Addresses": 0,
             "DeviceNumber": 3,
-            "ID": "eni-0d7778f429dda454f",
+            "ID": "eni-0458b317b891b1d40",
             "IPv4Addresses": {
-                "192.168.130.206": {
+                "192.168.13.192": {
+                    "Assigned": false
+                },
+                "192.168.13.63": {
+                    "Assigned": false
+                },
+                "192.168.15.43": {
+                    "Assigned": false
+                },
+                "192.168.19.112": {
+                    "Assigned": false
+                },
+                "192.168.30.180": {
+                    "Assigned": false
+                }
+            },
+            "IsPrimary": false
+        },
+        "eni-08f89b8d2799ddf95": {
+            "AssignedIPv4Addresses": 3,
+            "DeviceNumber": 2,
+            "ID": "eni-08f89b8d2799ddf95",
+            "IPv4Addresses": {
+                "192.168.10.216": {
                     "Assigned": true
                 },
-                "192.168.143.101": {
+                "192.168.14.110": {
                     "Assigned": false
                 },
-                "192.168.157.205": {
+                "192.168.20.139": {
                     "Assigned": true
                 },
-                "192.168.161.148": {
+                "192.168.3.161": {
                     "Assigned": false
                 },
-                "192.168.164.163": {
-                    "Assigned": false
+                "192.168.3.24": {
+                    "Assigned": true
                 }
             },
             "IsPrimary": false
         }
     },
-    "TotalIPs": 10
+    "TotalIPs": 15
 }
 ```
 
-``` 
-# cni debugging log file
-cd /var/log/aws-routed-eni/
+##### Pods
 
-ls
-ipamd.log.2018-07-17-22  ipamd.log.2018-07-17-23  ipamd.log.2018-07-18-00  ipamd.log.2018-07-18-01  plugin.log.2018-07-18-00  plugin.log.2018-07-18-01
 ```
+curl http://localhost:61678/v1/pods  | python -m json.tool
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  1160  100  1160    0     0   1160      0  0:00:01 --:--:--  0:00:01  226k
+{
+    "worker-hello-5d9b798f74-2gnkc_default_0e3bdc55d56b8b171568404094449834f5978de4aebfb1b51cb3af8338c24395": {
+        "DeviceNumber": 0,
+        "IP": "192.168.7.62"
+    },
+    "worker-hello-5d9b798f74-h2x78_default_546fba2f45815f5063127b7c2c17e12309b2f100900b921712aa8e1cc5c22d3d": {
+        "DeviceNumber": 2,
+        "IP": "192.168.10.216"
+    },
+    "worker-hello-5d9b798f74-ktdxl_default_e578863a41cc43a30d375f9be3f547371cf712d2923038dd2e57cdb2e8fa5c65": {
+        "DeviceNumber": 2,
+        "IP": "192.168.3.24"
+    },
+    "worker-hello-5d9b798f74-nqg89_default_a8d205604fe0b41a57aeb748ffa12a4f14b2461f4da173717f8905dee49dfd18": {
+        "DeviceNumber": 0,
+        "IP": "192.168.24.73"
+    },
+    "worker-hello-5d9b798f74-szjsd_default_9fd147019bdfb553adaaed836c167c2d51d91a70fa81fe6fb2d9698bc192ce78": {
+        "DeviceNumber": 0,
+        "IP": "192.168.29.205"
+    },
+    "worker-hello-5d9b798f74-wrw8r_default_d621c464bc7f72378be650711f4fc92b7a4a40ca9d2c4905636e8d0f9fa8a764": {
+        "DeviceNumber": 2,
+        "IP": "192.168.20.139"
+    },
+    "worker-hello-5d9b798f74-xhf5b_default_4a7e02a864fc5f534fda0d7069cb1568596ece393ebfa441898cdcfcafb7ce2e": {
+        "DeviceNumber": 0,
+        "IP": "192.168.7.54"
+    },
+    "worker-hello-5d9b798f74-zk7c7_default_2aa3442e7c611e52ca6ca97cdeb8a732012e51a27ae70e7fdfca4e5b3f925802": {
+        "DeviceNumber": 0,
+        "IP": "192.168.9.15"
+    }
+}
+```
+
+##### CNI metrics
+
+```
+curl http://localhost:61678/metrics
+# HELP add_ip_req_count The number of add IP address request
+# TYPE add_ip_req_count counter
+add_ip_req_count 72
+# HELP assigned_ip_addresses The number of IP addresses assigned to pods
+# TYPE assigned_ip_addresses gauge
+assigned_ip_addresses 8
+# HELP eni_allocated The number of ENIs allocated
+# TYPE eni_allocated gauge
+eni_allocated 3
+# HELP eni_max The maximum number of ENIs that can be attached to the instance
+# TYPE eni_max gauge
+eni_max 3
+# HELP go_gc_duration_seconds A summary of the GC invocation durations.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 2.7068e-05
+go_gc_duration_seconds{quantile="0.25"} 6.1571e-05
+go_gc_duration_seconds{quantile="0.5"} 0.000100168
+go_gc_duration_seconds{quantile="0.75"} 0.000197111
+go_gc_duration_seconds{quantile="1"} 0.000349902
+go_gc_duration_seconds_sum 0.076581308
+go_gc_duration_seconds_count 578
+# HELP go_goroutines Number of goroutines that currently exist.
+# TYPE go_goroutines gauge
+go_goroutines 23
+# HELP go_memstats_alloc_bytes Number of bytes allocated and still in use.
+# TYPE go_memstats_alloc_bytes gauge
+go_memstats_alloc_bytes 5.184912e+06
+# HELP go_memstats_alloc_bytes_total Total number of bytes allocated, even if freed.
+# TYPE go_memstats_alloc_bytes_total counter
+go_memstats_alloc_bytes_total 2.0154212e+08
+# HELP go_memstats_buck_hash_sys_bytes Number of bytes used by the profiling bucket hash table.
+# TYPE go_memstats_buck_hash_sys_bytes gauge
+go_memstats_buck_hash_sys_bytes 1.477868e+06
+# HELP go_memstats_frees_total Total number of frees.
+# TYPE go_memstats_frees_total counter
+go_memstats_frees_total 2.329102e+06
+# HELP go_memstats_gc_sys_bytes Number of bytes used for garbage collection system metadata.
+# TYPE go_memstats_gc_sys_bytes gauge
+go_memstats_gc_sys_bytes 614400
+# HELP go_memstats_heap_alloc_bytes Number of heap bytes allocated and still in use.
+# TYPE go_memstats_heap_alloc_bytes gauge
+go_memstats_heap_alloc_bytes 5.184912e+06
+# HELP go_memstats_heap_idle_bytes Number of heap bytes waiting to be used.
+# TYPE go_memstats_heap_idle_bytes gauge
+go_memstats_heap_idle_bytes 4.308992e+06
+# HELP go_memstats_heap_inuse_bytes Number of heap bytes that are in use.
+# TYPE go_memstats_heap_inuse_bytes gauge
+go_memstats_heap_inuse_bytes 7.716864e+06
+# HELP go_memstats_heap_objects Number of allocated objects.
+# TYPE go_memstats_heap_objects gauge
+go_memstats_heap_objects 36396
+# HELP go_memstats_heap_released_bytes_total Total number of heap bytes released to OS.
+# TYPE go_memstats_heap_released_bytes_total counter
+go_memstats_heap_released_bytes_total 4.120576e+06
+# HELP go_memstats_heap_sys_bytes Number of heap bytes obtained from system.
+# TYPE go_memstats_heap_sys_bytes gauge
+go_memstats_heap_sys_bytes 1.2025856e+07
+# HELP go_memstats_last_gc_time_seconds Number of seconds since 1970 of last garbage collection.
+# TYPE go_memstats_last_gc_time_seconds gauge
+go_memstats_last_gc_time_seconds 1.542659671256665e+09
+# HELP go_memstats_lookups_total Total number of pointer lookups.
+# TYPE go_memstats_lookups_total counter
+go_memstats_lookups_total 13511
+# HELP go_memstats_mallocs_total Total number of mallocs.
+# TYPE go_memstats_mallocs_total counter
+go_memstats_mallocs_total 2.365498e+06
+# HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures.
+# TYPE go_memstats_mcache_inuse_bytes gauge
+go_memstats_mcache_inuse_bytes 3472
+# HELP go_memstats_mcache_sys_bytes Number of bytes used for mcache structures obtained from system.
+# TYPE go_memstats_mcache_sys_bytes gauge
+go_memstats_mcache_sys_bytes 16384
+# HELP go_memstats_mspan_inuse_bytes Number of bytes in use by mspan structures.
+# TYPE go_memstats_mspan_inuse_bytes gauge
+go_memstats_mspan_inuse_bytes 110504
+# HELP go_memstats_mspan_sys_bytes Number of bytes used for mspan structures obtained from system.
+# TYPE go_memstats_mspan_sys_bytes gauge
+go_memstats_mspan_sys_bytes 147456
+# HELP go_memstats_next_gc_bytes Number of heap bytes when next garbage collection will take place.
+# TYPE go_memstats_next_gc_bytes gauge
+go_memstats_next_gc_bytes 9.6544e+06
+# HELP go_memstats_other_sys_bytes Number of bytes used for other system allocations.
+# TYPE go_memstats_other_sys_bytes gauge
+go_memstats_other_sys_bytes 637964
+# HELP go_memstats_stack_inuse_bytes Number of bytes in use by the stack allocator.
+# TYPE go_memstats_stack_inuse_bytes gauge
+go_memstats_stack_inuse_bytes 557056
+# HELP go_memstats_stack_sys_bytes Number of bytes obtained from system for stack allocator.
+# TYPE go_memstats_stack_sys_bytes gauge
+go_memstats_stack_sys_bytes 557056
+# HELP go_memstats_sys_bytes Number of bytes obtained by system. Sum of all system allocations.
+# TYPE go_memstats_sys_bytes gauge
+go_memstats_sys_bytes 1.5476984e+07
+# HELP ip_max The maximum number of IP addresses that can be allocated to the instance
+# TYPE ip_max gauge
+ip_max 15
+# HELP ipamd_action_inprogress The number of ipamd actions inprogress
+# TYPE ipamd_action_inprogress gauge
+ipamd_action_inprogress{fn="increaseIPPool"} 0
+ipamd_action_inprogress{fn="nodeIPPoolReconcile"} 0
+ipamd_action_inprogress{fn="nodeInit"} 0
+ipamd_action_inprogress{fn="retryAllocENIIP"} 0
+# HELP ipamd_error_count The number of errors encountered in ipamd
+# TYPE ipamd_error_count counter
+ipamd_error_count{error="unable to get local pods, giving up",fn="nodeInitK8SGetLocalPodIPsFailed"} 1
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 99.94
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 65536
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 10
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 3.1432704e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.54259115532e+09
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 4.8050176e+07
+# HELP total_ip_addresses The total number of IP addresses
+# TYPE total_ip_addresses gauge
+total_ip_addresses 15
+
+```
+
+#### CNI logs
+
+```
+[ec2-user@ip-192-168-4-93 bin]$ cd /var/log/aws-routed-eni/
+[ec2-user@ip-192-168-4-93 aws-routed-eni]$ ls
+ipamd.log.2018-11-19-01  ipamd.log.2018-11-19-04  ipamd.log.2018-11-19-07  ipamd.log.2018-11-19-10  ipamd.log.2018-11-19-13  ipamd.log.2018-11-19-16  ipamd.log.2018-11-19-19
+ipamd.log.2018-11-19-02  ipamd.log.2018-11-19-05  ipamd.log.2018-11-19-08  ipamd.log.2018-11-19-11  ipamd.log.2018-11-19-14  ipamd.log.2018-11-19-17  ipamd.log.2018-11-19-20
+ipamd.log.2018-11-19-03  ipamd.log.2018-11-19-06  ipamd.log.2018-11-19-09  ipamd.log.2018-11-19-12  ipamd.log.2018-11-19-15  ipamd.log.2018-11-19-18  plugin.log.2018-11-19-19
+```
+
+
 
 
 
