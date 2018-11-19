@@ -30,8 +30,18 @@ ssh -i <key-name>  ec2-user@ec2-xx-xx-xx-xx.eu-west-1.compute.amazonaws.com
 ### Clone github:
 
 - Before we begin, clone reinvent2018-NET410 github repository in $HOME directory:
+
 ```
-[ec2-user@ip-172-31-25-39 ~]$ git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
+[ec2-user@ip-172-31-9-36 ~]$ git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
+Cloning into 'reinvent2018-NET410'...
+remote: Enumerating objects: 102, done.
+remote: Counting objects: 100% (102/102), done.
+remote: Compressing objects: 100% (80/80), done.
+remote: Total 102 (delta 34), reused 71 (delta 17), pack-reused 0
+Receiving objects: 100% (102/102), 750.58 KiB | 2.34 MiB/s, done.
+Resolving deltas: 100% (34/34), done.
+[ec2-user@ip-172-31-9-36 ~]$
+[ec2-user@ip-172-31-9-36 ~]$ cd reinvent2018-NET410/ 
 ```
 
 ## NET410 workshop activity: EKS cluster
@@ -177,49 +187,87 @@ aws ec2 describe-network-interfaces --network-interface-ids eni-0f96810f42e4f53e
 	* Avoid attaching deny permissions on APIs required by AmzonEKS for managing ENIs in your VPC.
 
 	 
+## AWS VPC Routed CNI
+
+[https://github.com/aws/amazon-vpc-cni-k8s](https://github.com/aws/amazon-vpc-cni-k8s)
        
-
-
-### Pod Netowrk Stack Internal
-
-```
-kubectl get node
-NAME                              STATUS    ROLES     AGE       VERSION
-ip-192-168-112-98.ec2.internal    Ready     <none>    14m       v1.10.3
-ip-192-168-167-201.ec2.internal   Ready     <none>    14m       v1.10.3
-ip-192-168-242-227.ec2.internal   Ready     <none>    14m       v1.10.3
-```
 ### Create Pods
 
 ```
-git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
-
-```
-
-```
-cd reinvent2018-NET410/eks-cni-demo
-```
-
-```
-kubectl apply -f worker_hello.yaml
+kubectl apply -f eks-cni-demo/worker_hello.yaml
 ```
 
 ### Show Pods
 
 ```
 kubectl get pod -o wide
-NAME                            READY     STATUS    RESTARTS   AGE       IP                NODE
-worker-hello-5d9b798f74-72q5t   1/1       Running   0          27s       192.168.130.206   ip-192-168-167-201.ec2.internal
-worker-hello-5d9b798f74-cbgz5   1/1       Running   0          27s       192.168.247.50    ip-192-168-242-227.ec2.internal
-worker-hello-5d9b798f74-f9pkn   1/1       Running   0          27s       192.168.157.205   ip-192-168-167-201.ec2.internal
-worker-hello-5d9b798f74-fv8jw   1/1       Running   0          27s       192.168.207.203   ip-192-168-242-227.ec2.internal
-worker-hello-5d9b798f74-g86wg   1/1       Running   0          27s       192.168.119.223   ip-192-168-112-98.ec2.internal
-worker-hello-5d9b798f74-hspdj   1/1       Running   0          27s       192.168.121.243   ip-192-168-112-98.ec2.internal
-worker-hello-5d9b798f74-j8vtf   1/1       Running   0          27s       192.168.82.156    ip-192-168-112-98.ec2.internal
-worker-hello-5d9b798f74-mjxnn   1/1       Running   0          27s       192.168.238.188   ip-192-168-242-227.ec2.internal
-worker-hello-5d9b798f74-sfgtb   1/1       Running   0          27s       192.168.141.2     ip-192-168-167-201.ec2.internal
-worker-hello-5d9b798f74-wcsgs   1/1       Running   0          27s       192.168.224.202   ip-192-168-242-227.ec2.internal
+NAME                            READY   STATUS    RESTARTS   AGE   IP               NODE
+worker-hello-5d9b798f74-2gnkc   1/1     Running   0          1m    192.168.7.62     ip-192-168-4-93.eu-west-1.compute.internal
+worker-hello-5d9b798f74-bjmq4   1/1     Running   0          1m    192.168.66.62    ip-192-168-77-144.eu-west-1.compute.internal
+worker-hello-5d9b798f74-dmlbt   1/1     Running   0          1m    192.168.79.49    ip-192-168-77-144.eu-west-1.compute.internal
+worker-hello-5d9b798f74-gfdwn   1/1     Running   0          1m    192.168.64.225   ip-192-168-77-144.eu-west-1.compute.internal
+worker-hello-5d9b798f74-h2x78   1/1     Running   0          1m    192.168.10.216   ip-192-168-4-93.eu-west-1.compute.internal
+worker-hello-5d9b798f74-hs4mb   1/1     Running   0          1m    192.168.79.76    ip-192-168-77-144.eu-west-1.compute.internal
+worker-hello-5d9b798f74-ktdxl   1/1     Running   0          1m    192.168.3.24     ip-192-168-4-93.eu-west-1.compute.internal
+worker-hello-5d9b798f74-nqg89   1/1     Running   0          1m    192.168.24.73    ip-192-168-4-93.eu-west-1.compute.internal
+worker-hello-5d9b798f74-p46rx   1/1     Running   0          1m    192.168.74.135   ip-192-168-77-144.eu-west-1.compute.internal
+worker-hello-5d9b798f74-p49pm   1/1     Running   0          1m    192.168.71.6     ip-192-168-77-144.eu-west-1.compute.internal
+worker-hello-5d9b798f74-szjsd   1/1     Running   0          1m    192.168.29.205   ip-192-168-4-93.eu-west-1.compute.internal
+worker-hello-5d9b798f74-w5k64   1/1     Running   0          1m    192.168.75.241   ip-192-168-77-144.eu-west-1.compute.internal
+worker-hello-5d9b798f74-wrw8r   1/1     Running   0          1m    192.168.20.139   ip-192-168-4-93.eu-west-1.compute.internal
+worker-hello-5d9b798f74-xhf5b   1/1     Running   0          1m    192.168.7.54     ip-192-168-4-93.eu-west-1.compute.internal
+worker-hello-5d9b798f74-zk7c7   1/1     Running   0          1m    192.168.9.15     ip-192-168-4-93.eu-west-1.compute.internal
 ```
+
+### Pod to Pod Communication
+
+#### Pod to Pod Ping
+
+```
+kubectl exec -ti worker-hello-5d9b798f74-2gnkc sh
+```
+
+##### intra-node, Pod to Pod Ping
+```
+/go # ping 192.168.3.24
+PING 192.168.3.24 (192.168.3.24): 56 data bytes
+64 bytes from 192.168.3.24: seq=0 ttl=254 time=0.076 ms
+64 bytes from 192.168.3.24: seq=1 ttl=254 time=0.076 ms
+^C
+--- 192.168.3.24 ping statistics ---
+2 packets transmitted, 2 packets received, 0% packet loss
+round-trip min/avg/max = 0.076/0.076/0.076 ms
+```
+##### Inter-node Pod to Pod Ping
+```
+/go # ping 192.168.66.62
+PING 192.168.66.62 (192.168.66.62): 56 data bytes
+64 bytes from 192.168.66.62: seq=0 ttl=253 time=0.943 ms
+64 bytes from 192.168.66.62: seq=1 ttl=253 time=0.813 ms
+^C
+--- 192.168.66.62 ping statistics ---
+2 packets transmitted, 2 packets received, 0% packet loss
+round-trip min/avg/max = 0.813/0.878/0.943 ms
+```
+
+##### Pod to External Ping
+```
+ping www.yahoo.com
+PING www.yahoo.com (87.248.98.7): 56 data bytes
+64 bytes from 87.248.98.7: seq=0 ttl=48 time=1.212 ms
+64 bytes from 87.248.98.7: seq=1 ttl=48 time=1.215 ms
+^C
+--- www.yahoo.com ping statistics ---
+2 packets transmitted, 2 packets received, 0% packet loss
+round-trip min/avg/max = 1.212/1.213/1.215 ms
+```
+
+#### CNI Network Internal: Data Plane
+
+![](./images/dataplan.png)
+
+
+
 ### Inside Pod
 
 ```
