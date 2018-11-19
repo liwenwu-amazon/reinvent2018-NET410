@@ -1,20 +1,39 @@
-# CNI DEMO
+# AWS VPC routed CNI and Amazon EKS Cluster Networking
 
-## Setup a EKS cluster
+## Objective:
 
-### Create a t2.micro instance (using AWS console)
+* Exam major components of AWS VPC routed CNI and demonstrace how it handles traffic for:
+	* Pod to Pod communication
+	* Pod to Service communication
+* Exam the communication channels between Amazon EKS Kubernetes Control Plane and Customer worker nodes.
 
-* create EC2 key pair, e.g. my-eks-key
-* create a `t2.micro` instance using AMI `ami-0965d7fbfc86df411` using `my-eks-key`
-* run `aws configure` to configure instance with right permission
+## Workshop setup:
 
-### Create a EKS cluster 
+### [AWS CloudFormation Template](https://aws.amazon.com/cloudformation/):
+
+- **For this workshop activity, we are using AWS CloudFormation template to configure workshop setup.**
+- You should have launched the template at the beginning of the session and your cluster should already be up and running
+- If you did not launch the template or template did not launch successfully, you can re-launch AWS CloudFormation template from link below. **Launch it in eu-west-1 (Ireland) region**:
+
+  - [CloudFormation Template: NET410 Workshop Setup](https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
+
+## ssh into EKS console
+
+* Find out `Eksec2Instance` and EC2 instance ID from Cloudformation resource
+* ssh into EKS instance
 
 ```
-# create a EKS cluster
+ssh -i <key-name>  ec2-user@ec2-xx-xx-xx-xx.eu-west-1.compute.amazonaws.com
 
-eksctl create cluster --name reinvent-eks-1 --node-type=t2.medium  --ssh-access --ssh-public-key=my-eks-key --region us-west-2
 ```
+
+## Clone github:
+
+- Before we begin, clone reinvent2018-NET410 github repository in $HOME directory:
+```
+[ec2-user@ip-172-31-25-39 ~]$ git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
+```
+
 
 ## Pod Netowrk Stack Internal
 
