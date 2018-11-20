@@ -19,7 +19,7 @@
 
 ### ssh into EKS console
 
-* Find out `EksEC2Instance` and EC2 instance ID from Cloudformation resource
+* Find out `EksEC2Instance` and EC2 instance ID from Cloudformation resource or through EC2 console
 * ssh into EKS instance
 
 ```
@@ -123,7 +123,10 @@ ip-192-168-77-144.eu-west-1.compute.internal   Ready    <none>   15h   v1.10.3  
 * kubectl logs/exec uses this channel (EKS Master -> Pods) 
 * Pods (e.g. kube-dns, aws-cni) use this channel to Read/Write/Watch Kubernetes API objects
 
-#### Cross Account ENI 
+#### Cross Account ENI
+
+* You can find out the Cross Account ENIs in EC2 console, network interfaces, where its `Description` is `"Amazon EKS net410-eks-cluster"`
+ 
 ```
 [ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ aws ec2 describe-network-interfaces --network-interface-ids eni-0f96810f42e4f53e8 --region eu-west-1
 {
@@ -268,6 +271,11 @@ round-trip min/avg/max = 1.212/1.213/1.215 ms
 
 ### Life of a Ping Packet
 ![](./images/life-of-packet.png)
+
+### Implementation Details
+
+* Rely on **Linux Routing Table** to forward traffic to the right Pod
+* Rely on **Linux Policy Routing**, IP rules to enforce Pod's traffic are sent out on the correct ENI.  For example, if a Pod1 is assigned with a secondary IP address from `eth2`, Linux Policy Routing IP rules will be programmed to enforce Pod1's outgoing traffic is sent out through `eth2`
 
 ### Inside Pod
 
@@ -426,7 +434,7 @@ eni6a241e7f902: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 
 ``` 
 
-* Policy Routing is used to enforce Pod's outgoing traffic is sent out through the ENI that Pod's IP belongs to 
+* **Linux Policy Routing** is used to enforce Pod's outgoing traffic is sent out through the ENI that Pod's IP belongs to 
  
 ```
 # Poicy routing
