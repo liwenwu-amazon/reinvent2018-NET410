@@ -32,7 +32,7 @@ ssh -i <key-name>  ec2-user@ec2-xx-xx-xx-xx.eu-west-1.compute.amazonaws.com
 - Before we begin, clone reinvent2018-NET410 github repository in $HOME directory:
 
 ```
-[ec2-user@ip-172-31-9-36 ~]$ git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
 Cloning into 'reinvent2018-NET410'...
 remote: Enumerating objects: 102, done.
 remote: Counting objects: 100% (102/102), done.
@@ -54,7 +54,7 @@ Resolving deltas: 100% (34/34), done.
 
 #### aws eks list-clusters
 ```
-aws eks list-clusters
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ aws eks list-clusters
 {
     "clusters": [
         "net410-eks-cluster"
@@ -65,7 +65,7 @@ aws eks list-clusters
 #### aws eks describe-cluster --name net410-eks-cluster
 
 ```
-aws eks describe-cluster --name net410-eks-cluster
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ aws eks describe-cluster --name net410-eks-cluster
 {
     "cluster": {
         "status": "ACTIVE", 
@@ -99,14 +99,14 @@ aws eks describe-cluster --name net410-eks-cluster
 #### Kubernetes Cluster Info
 
 ```
-kubectl cluster-info
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ kubectl cluster-info
 Kubernetes master is running at https://C23A88F2572AAF0B1AEA36CD119D0682.yl4.eu-west-1.eks.amazonaws.com
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ```
 
 ```
-[ec2-user@ip-172-31-9-36 ~]$ kubectl get node -o wide
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ kubectl get node -o wide
 NAME                                           STATUS   ROLES    AGE   VERSION   EXTERNAL-IP   OS-IMAGE         KERNEL-VERSION               CONTAINER-RUNTIME
 ip-192-168-4-93.eu-west-1.compute.internal     Ready    <none>   15h   v1.10.3   <none>        Amazon Linux 2   4.14.72-73.55.amzn2.x86_64   docker://17.6.2
 ip-192-168-77-144.eu-west-1.compute.internal   Ready    <none>   15h   v1.10.3   <none>        Amazon Linux 2   4.14.72-73.55.amzn2.x86_64   docker://17.6.2
@@ -125,7 +125,7 @@ ip-192-168-77-144.eu-west-1.compute.internal   Ready    <none>   15h   v1.10.3  
 
 #### Cross Account ENI 
 ```
-aws ec2 describe-network-interfaces --network-interface-ids eni-0f96810f42e4f53e8 --region eu-west-1
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ aws ec2 describe-network-interfaces --network-interface-ids eni-0f96810f42e4f53e8 --region eu-west-1
 {
     "NetworkInterfaces": [
         {
@@ -194,13 +194,13 @@ aws ec2 describe-network-interfaces --network-interface-ids eni-0f96810f42e4f53e
 ### Create Pods
 
 ```
-kubectl apply -f eks-cni-demo/worker_hello.yaml
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ kubectl apply -f eks-cni-demo/worker_hello.yaml
 ```
 
 ### Show Pods
 
 ```
-kubectl get pod -o wide
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ kubectl get pod -o wide
 NAME                            READY   STATUS    RESTARTS   AGE   IP               NODE
 worker-hello-5d9b798f74-2gnkc   1/1     Running   0          1m    192.168.7.62     ip-192-168-4-93.eu-west-1.compute.internal
 worker-hello-5d9b798f74-bjmq4   1/1     Running   0          1m    192.168.66.62    ip-192-168-77-144.eu-west-1.compute.internal
@@ -224,7 +224,7 @@ worker-hello-5d9b798f74-zk7c7   1/1     Running   0          1m    192.168.9.15 
 #### Pod to Pod Ping
 
 ```
-kubectl exec -ti worker-hello-5d9b798f74-2gnkc sh
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ kubectl exec -ti worker-hello-5d9b798f74-2gnkc sh
 ```
 
 #### Intra-node, Pod to Pod Ping
@@ -252,7 +252,7 @@ round-trip min/avg/max = 0.813/0.878/0.943 ms
 
 #### Pod to External Ping
 ```
-ping www.yahoo.com
+/go # ping www.yahoo.com
 PING www.yahoo.com (87.248.98.7): 56 data bytes
 64 bytes from 87.248.98.7: seq=0 ttl=48 time=1.212 ms
 64 bytes from 87.248.98.7: seq=1 ttl=48 time=1.215 ms
@@ -274,7 +274,7 @@ round-trip min/avg/max = 1.212/1.213/1.215 ms
 notes: the following are data from my setup. 
 
 ```
- kubectl exec -ti worker-hello-5d9b798f74-72q5t sh
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ kubectl exec -ti worker-hello-5d9b798f74-2gnkc sh
 ```
 
 #### `192.168.7.62` is the secondary IP addess from ENI
@@ -302,7 +302,7 @@ lo        Link encap:Local Loopback
 * All Pod's outgoing traffic will be sent out Pod's `eth0` interface
 
 ```
-ip route
+/go #ip route
 default via 169.254.1.1 dev eth0 
 169.254.1.1 dev eth0 scope link 
 ```
@@ -336,7 +336,7 @@ https://aws.amazon.com/amazon-linux-2/
 
 #### Install tcpdump 
 ```
-sudo yum install tcpdump
+[ec2-user@ip-192-168-4-93 ~]$ sudo yum install tcpdump
 Loaded plugins: priorities, update-motd
 amzn2-core                                                                                                                                                                                                              | 2.4 kB  00:00:00     
 amzn2extra-docker                                                                                                                                                                                                       | 1.3 kB  00:00:00     
@@ -394,7 +394,7 @@ Complete!
 #####  Pod `192.168.7.62`(worker-hello-5d9b798f74-72q5t) is attached to Linux *veth*: `eni6a241e7f902` 
 
 ```
-ip route
+[ec2-user@ip-192-168-4-93 ~]$ ip route
 default via 192.168.0.1 dev eth0 
 169.254.169.254 dev eth0 
 172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown 
@@ -452,7 +452,7 @@ eni6a241e7f902: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 ```
 # show route table 2
 
-ip route show table 2
+[ec2-user@ip-192-168-4-93 ~]$ ip route show table 2
 default via 192.168.128.1 dev eth1 <-- outgoing eth1
 192.168.128.1 dev eth1 scope link
 ```
@@ -462,7 +462,7 @@ default via 192.168.128.1 dev eth1 <-- outgoing eth1
 #####  ping from Pod (192.168.7.62) on node (ip-192-168-4-93) to Pod (192.168.79.49) on node (ip-192-168-77-144)
 
 ```
- kubectl exec -ti worker-hello-5d9b798f74-2gnkc  sh
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ kubectl exec -ti worker-hello-5d9b798f74-2gnkc  sh
  
  /go # ping 192.168.79.49
 PING 192.168.79.49 (192.168.79.49): 56 data bytes
@@ -479,7 +479,7 @@ PING 192.168.79.49 (192.168.79.49): 56 data bytes
 
 ##### Exam packet on Pod's veth interface `eni6a241e7f902`
 ```
-sudo tcpdump -i eni6a241e7f902
+[ec2-user@ip-192-168-4-93 ~]$ sudo tcpdump -i eni6a241e7f902
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
 listening on eni6a241e7f902, link-type EN10MB (Ethernet), capture size 262144 bytes
 20:10:51.935972 IP ip-192-168-7-62.eu-west-1.compute.internal > ip-192-168-79-49.eu-west-1.compute.internal: ICMP echo request, id 3584, seq 31, length 64
@@ -517,7 +517,7 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
 Kubernetes is a service that Pods such as `kube-dns` can Read/Write/Watch Kubernetes API objects
 
 ```
-kubectl get service
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ kubectl get service
 NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
 kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   18h
 ```
@@ -525,7 +525,7 @@ kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   18h
 #### Kubernetes Service EndPoints (EKS masters)
 
 ```
-[ec2-user@ip-172-31-9-36 ~]$ kubectl describe service kubernetes
+[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ kubectl describe service kubernetes
 Name:              kubernetes
 Namespace:         default
 Labels:            component=apiserver
@@ -550,7 +550,7 @@ Events:            <none>
 ##### Display Linux IP tables
 
 ```
-[ec2-user@ip-192-168-4-93 ~]$sudo iptables-save
+[ec2-user@ip-192-168-4-93 ~]$ sudo iptables-save
 # Generated by iptables-save v1.4.21 on Mon Nov 19 20:27:10 2018
 *mangle
 :PREROUTING ACCEPT [604975:226116018]
@@ -727,7 +727,7 @@ COMMIT
 ##### Pods
 
 ```
-curl http://localhost:61678/v1/pods  | python -m json.tool
+[ec2-user@ip-192-168-4-93 bin]$ curl http://localhost:61678/v1/pods  | python -m json.tool
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100  1160  100  1160    0     0   1160      0  0:00:01 --:--:--  0:00:01  226k
@@ -770,7 +770,7 @@ curl http://localhost:61678/v1/pods  | python -m json.tool
 ##### CNI metrics
 
 ```
-curl http://localhost:61678/metrics
+[ec2-user@ip-192-168-4-93 bin]$ curl http://localhost:61678/metrics
 # HELP add_ip_req_count The number of add IP address request
 # TYPE add_ip_req_count counter
 add_ip_req_count 72
