@@ -7,6 +7,11 @@
 	* Pod to Service communication
 * Exam the communication channels between Amazon EKS Kubernetes Control Plane and Customer worker nodes.
 
+## Overview of the Workshop
+* Perform intra-node Pod to Pod communication and exam the major components involved in the life of a ping packet
+* Perform inter-node Pod to Pod communication and exam the major components involved in the life of a ping packet
+* Exam the IPtable for kubernete services
+
 ## Workshop setup:
 
 ### [AWS CloudFormation Template](https://aws.amazon.com/cloudformation/):
