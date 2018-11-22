@@ -19,10 +19,14 @@
 - Launch CloudFormation template with default values except of ssh key-pair. Please use existing or newly created ssh key-pair
 
 - AWS CloudFormation Template creates:
-  - Two Amazon EC2 instances for workshop setup:
-    1. net410-workshop -kops
-    2. net410-workshop -eks
-  - Setup up environment including install necessary tools
+  - Two Amazon EC2 instances for workshop setup and management:
+    1. **net410-workshop-kops-mgmt**
+    2. **net410-workshop-eks-mgmt**
+  - Sets up environment including installing necessary tools
   - Creates two clusters:
     1. [kops - kubernetes sperations](https://github.com/kubernetes/kops/blob/master/README.md)
+      - 1 master node
+      - 2 worker nodes across 2 availability zones
     2. [Amazon EKS Cluster](https://aws.amazon.com/eks/)
+      - Control plane is managed by Amazon EKS
+      - 2 worker nodes across 2 availability zones
