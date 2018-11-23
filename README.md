@@ -15,7 +15,7 @@
 ### Create two clusters:
 
 - **For this workshop, we will use AWS CloudFormation to create two clusters**
-- Launch [AWS CloudFormation Template in eu-west-1 (Ireland) region](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/create?templateURL=https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
+- Launch [AWS CloudFormation Template in eu-west-1 (Ireland) region](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?templateURL=https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
   - Launch CloudFormation template with **default values except of ssh key-pair**. Please use existing or newly created ssh key-pair
 
 - AWS CloudFormation Template creates:
@@ -30,3 +30,7 @@
     2. [Amazon EKS Cluster](https://aws.amazon.com/eks/)
         - Control plane is managed by Amazon EKS
         - 2 worker nodes across 2 availability zones
+
+### CloudFormation Template:
+
+- [NET410 Workshop Setup: CloudFormation Template](https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)

@@ -9,30 +9,32 @@
 
 ## Workshop setup:
 
-### [AWS CloudFormation Template](https://aws.amazon.com/cloudformation/):
+### Create Amazon EKS cluster using [AWS CloudFormation Template](https://aws.amazon.com/cloudformation/):
 
 - **For this workshop activity, we are using AWS CloudFormation template to configure workshop setup.**
-- You should have launched the template at the beginning of the session and your cluster should already be up and running
-- If you did not launch the template or template did not launch successfully, you can re-launch AWS CloudFormation template from link below. **Launch it in eu-west-1 (Ireland) region**:
+- You should have launched the AWS CloudFormation template at the beginning of the workshop session and your cluster should be already up and running
+- If you did not launch the AWS CloudFormation template or template did not launch successfully, you can re-launch AWS CloudFormation template from link below.
+  - [AWS CloudFormation Template: NET410 Workshop Setup](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?templateURL=https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
+  - **Verify you are launching it in eu-west-1 (Ireland) region**:
 
-  - [CloudFormation Template: NET410 Workshop Setup](https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
+## Before we begin:
 
-### ssh into EKS console
+### Access net410-workshop-eks-mgmt instance
 
-* Find out `EksEC2Instance` and EC2 instance ID from Cloudformation resource or through EC2 console
-* ssh into EKS instance
-
+- Click on [Amazon EC2 Console](https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:search=net410-workshop-eks-mgmt;sort=tag:Naeks-mgmt)
+to retrieve net410-workshop-eks-mgmt's public ip and ssh in to the instance
 ```
 ssh -i <key-name>  ec2-user@ec2-xx-xx-xx-xx.eu-west-1.compute.amazonaws.com
-
 ```
 
 ### Clone github:
 
-- Before we begin, clone reinvent2018-NET410 github repository in $HOME directory:
-
+- Clone reinvent2018-NET410 github repository in $HOME directory:
 ```
-[ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
+git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
+```
+```
+[ec2-user@ip-172-31-9-36 ~]$ git clone https://github.com/liwenwu-amazon/reinvent2018-NET410
 Cloning into 'reinvent2018-NET410'...
 remote: Enumerating objects: 102, done.
 remote: Counting objects: 100% (102/102), done.
@@ -41,10 +43,10 @@ remote: Total 102 (delta 34), reused 71 (delta 17), pack-reused 0
 Receiving objects: 100% (102/102), 750.58 KiB | 2.34 MiB/s, done.
 Resolving deltas: 100% (34/34), done.
 [ec2-user@ip-172-31-9-36 ~]$
-[ec2-user@ip-172-31-9-36 ~]$ cd reinvent2018-NET410/ 
+[ec2-user@ip-172-31-9-36 ~]$ cd reinvent2018-NET410/
 ```
 
-## NET410 workshop activity: EKS cluster
+## NET410 workshop activity: Amazon EKS cluster
 
 ## Amazon EKS Cluster
 
@@ -68,29 +70,29 @@ Resolving deltas: 100% (34/34), done.
 [ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ aws eks describe-cluster --name net410-eks-cluster
 {
     "cluster": {
-        "status": "ACTIVE", 
-        "endpoint": "https://C23A88F2572AAF0B1AEA36CD119D0682.yl4.eu-west-1.eks.amazonaws.com", 
-        "name": "net410-eks-cluster", 
+        "status": "ACTIVE",
+        "endpoint": "https://C23A88F2572AAF0B1AEA36CD119D0682.yl4.eu-west-1.eks.amazonaws.com",
+        "name": "net410-eks-cluster",
         "certificateAuthority": {
             "data": "......   "
-        }, 
-        "roleArn": "arn:aws:iam::694065802095:role/eksctl-net410-eks-cluster-cluster-ServiceRole-JQP22M9HN457", 
+        },
+        "roleArn": "arn:aws:iam::694065802095:role/eksctl-net410-eks-cluster-cluster-ServiceRole-JQP22M9HN457",
         "resourcesVpcConfig": {
             "subnetIds": [
-                "subnet-03570d333db01c922", 
-                "subnet-02b0202c2159049f3", 
-                "subnet-04dfca08b2fc54441", 
-                "subnet-0ff53ecf4d71f5a60", 
-                "subnet-09d6c50e781c0e074", 
+                "subnet-03570d333db01c922",
+                "subnet-02b0202c2159049f3",
+                "subnet-04dfca08b2fc54441",
+                "subnet-0ff53ecf4d71f5a60",
+                "subnet-09d6c50e781c0e074",
                 "subnet-01b4a2c179e95f519"
-            ], 
-            "vpcId": "vpc-09c7c672286bf7e94", 
+            ],
+            "vpcId": "vpc-09c7c672286bf7e94",
             "securityGroupIds": [
                 "sg-062a376f3d16fe673"
             ]
-        }, 
-        "version": "1.10", 
-        "arn": "arn:aws:eks:eu-west-1:xxxxx:cluster/net410-eks-cluster", 
+        },
+        "version": "1.10",
+        "arn": "arn:aws:eks:eu-west-1:xxxxx:cluster/net410-eks-cluster",
         "createdAt": 1542590239.656
     }
 }
@@ -120,13 +122,13 @@ ip-192-168-77-144.eu-west-1.compute.internal   Ready    <none>   15h   v1.10.3  
 
 ![](./images/cross-eni.png)
 
-* kubectl logs/exec uses this channel (EKS Master -> Pods) 
+* kubectl logs/exec uses this channel (EKS Master -> Pods)
 * Pods (e.g. kube-dns, aws-cni) use this channel to Read/Write/Watch Kubernetes API objects
 
 #### Cross Account ENI
 
 * You can find out the Cross Account ENIs in EC2 console, network interfaces, where its `Description` is `"Amazon EKS net410-eks-cluster"`
- 
+
 ```
 [ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ aws ec2 describe-network-interfaces --network-interface-ids eni-0f96810f42e4f53e8 --region eu-west-1
 {
@@ -172,14 +174,14 @@ ip-192-168-77-144.eu-west-1.compute.internal   Ready    <none>   15h   v1.10.3  
         }
     ]
 }
-``` 
+```
 ##### Troubleshooting Tips
 
 * Misconfigured control plane security group
 	* Control plane security group is assigned to ENIs created in the worker node subnets.
 	* When launching worker nodes, control plane security group is configured to receive packets from worker nodes.
 	* if different control plane security group is specified while creating worker nodes, pods will not be able to communicate with master
-* VPC related issues 
+* VPC related issues
 	* Deleting subnets in your VPC
 	* Removing Ingress and Egress required for Master and Worker node communication.
 	* Reaching ENI limits for an AWS Account.
@@ -189,11 +191,11 @@ ip-192-168-77-144.eu-west-1.compute.internal   Ready    <none>   15h   v1.10.3  
 	* Use Managed policy provided by EKS.
 	* Avoid attaching deny permissions on APIs required by AmzonEKS for managing ENIs in your VPC.
 
-	 
+
 ## AWS VPC Routed CNI
 
 [https://github.com/aws/amazon-vpc-cni-k8s](https://github.com/aws/amazon-vpc-cni-k8s)
-       
+
 ### Create Pods
 
 ```
@@ -279,7 +281,7 @@ round-trip min/avg/max = 1.212/1.213/1.215 ms
 
 ### Inside Pod
 
-notes: the following are data from my setup. 
+notes: the following are data from my setup.
 
 ```
 [ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ kubectl exec -ti worker-hello-5d9b798f74-2gnkc sh
@@ -288,20 +290,20 @@ notes: the following are data from my setup.
 #### `192.168.7.62` is the secondary IP addess from ENI
 ```
 /go # ifconfig
-eth0      Link encap:Ethernet  HWaddr EE:0A:C5:67:B7:90  
+eth0      Link encap:Ethernet  HWaddr EE:0A:C5:67:B7:90
           inet addr:192.168.7.62  Bcast:192.168.7.62  Mask:255.255.255.255
           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
           RX packets:35 errors:0 dropped:0 overruns:0 frame:0
           TX packets:21 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:0 
+          collisions:0 txqueuelen:0
           RX bytes:3754 (3.6 KiB)  TX bytes:1814 (1.7 KiB)
 
-lo        Link encap:Local Loopback  
+lo        Link encap:Local Loopback
           inet addr:127.0.0.1  Mask:255.0.0.0
           UP LOOPBACK RUNNING  MTU:65536  Metric:1
           RX packets:0 errors:0 dropped:0 overruns:0 frame:0
           TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000 
+          collisions:0 txqueuelen:1000
           RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
 ```
 
@@ -311,8 +313,8 @@ lo        Link encap:Local Loopback
 
 ```
 /go #ip route
-default via 169.254.1.1 dev eth0 
-169.254.1.1 dev eth0 scope link 
+default via 169.254.1.1 dev eth0
+169.254.1.1 dev eth0 scope link
 ```
 
 #### showing pod arp table
@@ -342,12 +344,12 @@ https://aws.amazon.com/amazon-linux-2/
 
 ```
 
-#### Install tcpdump 
+#### Install tcpdump
 ```
 [ec2-user@ip-192-168-4-93 ~]$ sudo yum install tcpdump
 Loaded plugins: priorities, update-motd
-amzn2-core                                                                                                                                                                                                              | 2.4 kB  00:00:00     
-amzn2extra-docker                                                                                                                                                                                                       | 1.3 kB  00:00:00     
+amzn2-core                                                                                                                                                                                                              | 2.4 kB  00:00:00
+amzn2extra-docker                                                                                                                                                                                                       | 1.3 kB  00:00:00
 Resolving Dependencies
 --> Running transaction check
 ---> Package tcpdump.x86_64 14:4.9.2-3.amzn2 will be installed
@@ -375,46 +377,46 @@ Total download size: 568 k
 Installed size: 1.3 M
 Is this ok [y/d/N]: y
 Downloading packages:
-(1/2): libpcap-1.5.3-11.amzn2.x86_64.rpm                                                                                                                                                                                | 140 kB  00:00:00     
-(2/2): tcpdump-4.9.2-3.amzn2.x86_64.rpm                                                                                                                                                                                 | 428 kB  00:00:00     
+(1/2): libpcap-1.5.3-11.amzn2.x86_64.rpm                                                                                                                                                                                | 140 kB  00:00:00
+(2/2): tcpdump-4.9.2-3.amzn2.x86_64.rpm                                                                                                                                                                                 | 428 kB  00:00:00
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Total                                                                                                                                                                                                          7.6 MB/s | 568 kB  00:00:00     
+Total                                                                                                                                                                                                          7.6 MB/s | 568 kB  00:00:00
 Running transaction check
 Running transaction test
 Transaction test succeeded
 Running transaction
-  Installing : 14:libpcap-1.5.3-11.amzn2.x86_64                                                                                                                                                                                            1/2 
-  Installing : 14:tcpdump-4.9.2-3.amzn2.x86_64                                                                                                                                                                                             2/2 
-  Verifying  : 14:libpcap-1.5.3-11.amzn2.x86_64                                                                                                                                                                                            1/2 
-  Verifying  : 14:tcpdump-4.9.2-3.amzn2.x86_64                                                                                                                                                                                             2/2 
+  Installing : 14:libpcap-1.5.3-11.amzn2.x86_64                                                                                                                                                                                            1/2
+  Installing : 14:tcpdump-4.9.2-3.amzn2.x86_64                                                                                                                                                                                             2/2
+  Verifying  : 14:libpcap-1.5.3-11.amzn2.x86_64                                                                                                                                                                                            1/2
+  Verifying  : 14:tcpdump-4.9.2-3.amzn2.x86_64                                                                                                                                                                                             2/2
 
 Installed:
-  tcpdump.x86_64 14:4.9.2-3.amzn2                                                                                                                                                                                                              
+  tcpdump.x86_64 14:4.9.2-3.amzn2
 
 Dependency Installed:
-  libpcap.x86_64 14:1.5.3-11.amzn2                                                                                                                                                                                                             
+  libpcap.x86_64 14:1.5.3-11.amzn2
 
 Complete!
 ```
 
 #### Route Table for to-Pod traffic
 
-#####  Pod `192.168.7.62`(worker-hello-5d9b798f74-72q5t) is attached to Linux *veth*: `eni6a241e7f902` 
+#####  Pod `192.168.7.62`(worker-hello-5d9b798f74-72q5t) is attached to Linux *veth*: `eni6a241e7f902`
 
 ```
 [ec2-user@ip-192-168-4-93 ~]$ ip route
-default via 192.168.0.1 dev eth0 
-169.254.169.254 dev eth0 
-172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown 
-192.168.0.0/19 dev eth0 proto kernel scope link src 192.168.4.93 
-192.168.3.24 dev eni1f29a933002 scope link 
-192.168.7.54 dev eni5eaa472d76b scope link 
+default via 192.168.0.1 dev eth0
+169.254.169.254 dev eth0
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown
+192.168.0.0/19 dev eth0 proto kernel scope link src 192.168.4.93
+192.168.3.24 dev eni1f29a933002 scope link
+192.168.7.54 dev eni5eaa472d76b scope link
 192.168.7.62 dev eni6a241e7f902 scope link <-- worker-hello-5d9b798f74-72q5t
-192.168.9.15 dev eni3ba2d1492d5 scope link 
-192.168.10.216 dev enidcee159cf44 scope link 
-192.168.20.139 dev eniccbdba09bad scope link 
-192.168.24.73 dev enie96d6354f21 scope link 
-192.168.29.205 dev eni8a6f029b3bc scope link 
+192.168.9.15 dev eni3ba2d1492d5 scope link
+192.168.10.216 dev enidcee159cf44 scope link
+192.168.20.139 dev eniccbdba09bad scope link
+192.168.24.73 dev enie96d6354f21 scope link
+192.168.29.205 dev eni8a6f029b3bc scope link
 ```
 
 #### Route Table for from-Pod Traffic
@@ -432,29 +434,29 @@ eni6a241e7f902: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         TX packets 39  bytes 4150 (4.0 KiB)
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 
-``` 
+```
 
-* **Linux Policy Routing** is used to enforce Pod's outgoing traffic is sent out through the ENI that Pod's IP belongs to 
- 
+* **Linux Policy Routing** is used to enforce Pod's outgoing traffic is sent out through the ENI that Pod's IP belongs to
+
 ```
 # Poicy routing
 [ec2-user@ip-192-168-4-93 ~]$ ip rule show
-0:	from all lookup local 
-512:	from all to 192.168.24.73 lookup main 
-512:	from all to 192.168.29.205 lookup main 
-512:	from all to 192.168.7.62 lookup main 
-512:	from all to 192.168.9.15 lookup main 
-512:	from all to 192.168.7.54 lookup main 
-512:	from all to 192.168.3.24 lookup main 
-512:	from all to 192.168.10.216 lookup main 
-512:	from all to 192.168.20.139 lookup main 
-1024:	not from all to 192.168.0.0/16 lookup main 
-1024:	from all fwmark 0x80/0x80 lookup main 
+0:	from all lookup local
+512:	from all to 192.168.24.73 lookup main
+512:	from all to 192.168.29.205 lookup main
+512:	from all to 192.168.7.62 lookup main
+512:	from all to 192.168.9.15 lookup main
+512:	from all to 192.168.7.54 lookup main
+512:	from all to 192.168.3.24 lookup main
+512:	from all to 192.168.10.216 lookup main
+512:	from all to 192.168.20.139 lookup main
+1024:	not from all to 192.168.0.0/16 lookup main
+1024:	from all fwmark 0x80/0x80 lookup main
 1536:	from 192.168.3.24 lookup 2 <-- these Pods uses IPs from secondary ENI (eth1)
-1536:	from 192.168.10.216 lookup 2 
-1536:	from 192.168.20.139 lookup 2 
-32766:	from all lookup main 
-32767:	from all lookup default  
+1536:	from 192.168.10.216 lookup 2
+1536:	from 192.168.20.139 lookup 2
+32766:	from all lookup main
+32767:	from all lookup default
 ```
 
 ```
@@ -465,13 +467,13 @@ default via 192.168.128.1 dev eth1 <-- outgoing eth1
 192.168.128.1 dev eth1 scope link
 ```
 
-#### exam Pod's traffic 
+#### exam Pod's traffic
 
 #####  ping from Pod (192.168.7.62) on node (ip-192-168-4-93) to Pod (192.168.79.49) on node (ip-192-168-77-144)
 
 ```
 [ec2-user@ip-172-31-9-36 reinvent2018-NET410]$ kubectl exec -ti worker-hello-5d9b798f74-2gnkc  sh
- 
+
  /go # ping 192.168.79.49
 PING 192.168.79.49 (192.168.79.49): 56 data bytes
 64 bytes from 192.168.79.49: seq=0 ttl=253 time=0.788 ms
