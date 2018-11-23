@@ -56,10 +56,10 @@ Resolving deltas: 100% (52/52), done.
 ### Create kops cluster using [AWS CloudFormation Template](https://aws.amazon.com/cloudformation/):
 
 - **For this workshop activity, we are using AWS CloudFormation template to configure workshop setup.**
-- You should have launched the template at the beginning of the session and your cluster should already be up and running
-- If you did not launch the template or template did not launch successfully, you can re-launch AWS CloudFormation template from link below. **Launch it in eu-west-1 (Ireland) region**:
-
-  - [CloudFormation Template: NET410 Workshop Setup](https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
+- You should have launched the template at the beginning of the workshop session and your cluster should already be up and running
+- If you did not launch the template or template did not launch successfully, you can re-launch AWS CloudFormation template from link below.
+  - [AWS CloudFormation Template: NET410 Workshop Setup](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/create?templateURL=https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
+  - **Verify you are launching it in eu-west-1 (Ireland) region**:
 
 ## NET410 workshop activity: kops cluster
 
@@ -326,7 +326,7 @@ deployment.apps/net410-kops-busybox created
 ```
 
 - You should be able to see busybox deployment:
-- should be on net410-workshop-kops-mgmt instance for this:
+  - should be on net410-workshop-kops-mgmt instance for this:
 ```
 kubectl get deployment -o wide
 kubectl get replicasets
@@ -356,9 +356,9 @@ net410-kops-busybox-55d8557b4d-48b88   1/1     Running   0          2m    100.65
 ```
 
 ### Check worker node networking details after deploying application:
-- Should be on the worker node for:
-  - Access worker node, you can use already opened ssh connection to the worker node or you can open a new connection
-  - Worker node public ip address can be found in the output of 'kubectl get nodes -o wide' command
+- Should be on the worker node for this:
+- Access worker node, you can use already opened ssh connection to the worker node or you can open a new connection
+- Worker node public ip address can be found in the output of 'kubectl get nodes -o wide' command
   ```
   kubectl get nodes -o wide
   ```
@@ -408,7 +408,7 @@ kubectl exec -ti net410-kops-busybox-55d8557b4d-28xr4 sh --> **use approrpiate p
 ```
 
 - View pod interface and ip address details:
-  - Should be on one of the pods for this activity:
+- Should be on one of the pods for this activity:
 ```
 ip addr show
 ```
