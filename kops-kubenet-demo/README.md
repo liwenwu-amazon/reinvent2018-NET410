@@ -26,12 +26,25 @@
 - Service (types: Cluster-IP, NodePort, LoadBalance, Ingress)
 - Network architecture (interfaces, bridge, route table, ip address)
 
+## Workshop setup:
+
+### Create kops cluster using [AWS CloudFormation Template](https://aws.amazon.com/cloudformation/):
+
+- **For this workshop activity, we are using AWS CloudFormation template to configure workshop setup.**
+- You should have launched the AWS CloudFormation template at the beginning of the workshop session and your cluster should be already up and running
+- If you did not launch the AWS CloudFormation template or template did not launch successfully, you can re-launch AWS CloudFormation template from link below.
+  - [AWS CloudFormation Template: NET410 Workshop Setup](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?templateURL=https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
+  - **Verify you are launching it in eu-west-1 (Ireland) region**:
+
 ## Before we begin:
 
 ### Access net410-workshop-kops-mgmt instance
 
 - Click on [Amazon EC2 Console](https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:search=net410-workshop-kops-mgmt;sort=tag:Nakops-mgmt)
 to retrieve net410-workshop-kops-mgmt's public ip and ssh in to the instance
+```
+ssh -i <key-name>  ec2-user@ec2-xx-xx-xx-xx.eu-west-1.compute.amazonaws.com
+```
 
 ### Clone github:
 
@@ -50,16 +63,6 @@ Receiving objects: 100% (148/148), 1.83 MiB | 4.19 MiB/s, done.
 Resolving deltas: 100% (52/52), done.
 [ec2-user@ip-172-31-25-39 ~]$
 ```
-
-## Workshop setup:
-
-### Create kops cluster using [AWS CloudFormation Template](https://aws.amazon.com/cloudformation/):
-
-- **For this workshop activity, we are using AWS CloudFormation template to configure workshop setup.**
-- You should have launched the template at the beginning of the workshop session and your cluster should already be up and running
-- If you did not launch the template or template did not launch successfully, you can re-launch AWS CloudFormation template from link below.
-  - [AWS CloudFormation Template: NET410 Workshop Setup](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/create?templateURL=https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
-  - **Verify you are launching it in eu-west-1 (Ireland) region**:
 
 ## NET410 workshop activity: kops cluster
 
