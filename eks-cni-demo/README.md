@@ -572,6 +572,20 @@ Events:            <none>
 
 * IPtables is used to handle Pod to service traffic
 
+#### Life of a Packet: Pod to Service
+* `kube-dns` Pod communicate with `kubernetes service` and discover kubernetes service name and kubernetes service cluster IP
+
+![](./images/dns.png)
+
+![](./images/pod2service-1.png)
+![](./images/pod2service-2.png)
+![](./images/pod2service-3.png)
+![](./images/pod2service-4.png)
+![](./images/pod2service-5.png)
+![](./images/pod2service-6.png)
+![](./images/pod2service-7.png)
+
+
 ##### ssh into worker node
 
 ##### Display Linux IP tables
