@@ -276,13 +276,25 @@ round-trip min/avg/max = 1.212/1.213/1.215 ms
 
 ![](./images/dataplan.png)
 
-### Life of a Ping Packet
-![](./images/life-of-packet.png)
-
 ### Implementation Details
 
 * Rely on **Linux Routing Table** to forward traffic to the right Pod
 * Rely on **Linux Policy Routing**, IP rules to enforce Pod's traffic are sent out on the correct ENI.  For example, if a Pod1 is assigned with a secondary IP address from `eth2`, Linux Policy Routing IP rules will be programmed to enforce Pod1's outgoing traffic is sent out through `eth2`
+
+### Life of a Ping Packet
+
+#### overview
+![](./images/life-of-packet.png)
+
+#### Life of Packet: Pod1-to-Pod3, across nodes
+![](./images/pod2pod-1.png)
+![](./images/pod2pod-2.png)
+![](./images/pod2pod-3.png)
+![](./images/pod2pod-4.png)
+![](./images/pod2pod-5.png)
+![](./images/pod2pod-6.png) 
+![](./images/pod2pod-7.png)
+
 
 ### Inside Pod
 
