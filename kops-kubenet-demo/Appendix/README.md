@@ -166,7 +166,7 @@ $ kops update net410-kops-cluster.k8s.local --yes
 
 - Use following commands to validate cluster creation:
 ```
-$ kubeclt cluster-info
+$ kubectl cluster-info
 $ kops get cluster
 $ kops validate cluster
 ```

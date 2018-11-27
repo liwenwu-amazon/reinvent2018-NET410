@@ -806,6 +806,3 @@ kops delete cluster net410-kops-cluster.k8s.local --yes
   - Public-Private topology uses multiple route tables, kubenet uses only one route table
 - Other more advanced features, such as BGP, egress control, and mesh networking, are only available with different CNI providers.
 - When it comes to network providers, their are different options. One should choose option that meets their requirements
-
-
-
