@@ -28,6 +28,14 @@
 
 ## Workshop setup:
 
+### Perform the clean up activity at the end of the activity before deleting the AWS CloudFormation stack
+
+- kops cluster created using AWS CloudFormation template needs to be deleted through management instance: net410-workshop-kops-mgmt.
+- Refer to **Clean up** activity at the end of the workshop activity
+- If AWS CloudFormation is deleted without deleting the kops cluster, deleting kops cluster worker node instances becomes difficult.
+  - We will enhance the workshop to handle clean up.
+  - Until then, if you run into a situation where AWS CloudFormation stack and in turn net410-workshop-kops-mgmt instance is deleted without deleting the kops cluster, re-launch the AWS CloudFormation Stack, access net410-workshop-kops-mgmt instance and delete the cluster. Once the kops cluster is deleted, you can delete the AWS CloudFormation stack.
+
 ### Create kops cluster using [AWS CloudFormation Template](https://aws.amazon.com/cloudformation/):
 
 - **For this workshop activity, we are using AWS CloudFormation template to configure workshop setup.**
@@ -72,7 +80,7 @@ Resolving deltas: 100% (52/52), done.
 
 - Display cluster information:
 ```
-kubeclt cluster-info
+kubectl cluster-info
 ```
 ```
 [ec2-user@ip-172-31-25-39 ~]$ kubectl cluster-info
@@ -452,7 +460,7 @@ default via 100.65.129.1 dev eth0
 / #
 ```
 
-### Clean up:
+### Delete busybox deployment:
 - Should be on the net410-workshop-kops-mgmt instance for this:
 - Delete busybox applicaiton/deployment:
 ```
@@ -759,6 +767,7 @@ $:
 ```
 
 # Once you are done with the activity please clean up, any resources that are left may incur cost.
+
 ## Clean up:
 - Should be on **net410-workshop-kops-mgmt** instance
 
