@@ -35,9 +35,6 @@
         - Control plane is managed by Amazon EKS
         - 2 worker nodes across 2 availability zones
 
-- **AWS CloudFormation will fail if default VPC does not exist**. Make sure you have default VPC
-    - Issue will be fixed soon. Until then please make sure you have default VPC
-
 ### CloudFormation Template:
 
 - [NET410 Workshop Setup: CloudFormation Template](https://s3-eu-west-1.amazonaws.com/net410-workshop-eu-west-1/net410-workshop-setup.json)
